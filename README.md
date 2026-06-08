@@ -1,40 +1,143 @@
 # Recorda
 
-App de aprendizado para pessoas com dificuldade de fixação de conteúdo (em
-especial perfis com TDAH), baseado em técnicas de estudo com comprovação
-científica para revisão periódica: recuperação ativa, repetição espaçada,
-chunking, codificação dual, elaboração e externalização de estrutura.
+> App de aprendizado para pessoas com dificuldade de fixação de conteúdo — especialmente perfis com TDAH — baseado em técnicas com comprovação científica.
 
-O usuário informa o tema que quer aprender; o app busca material em fontes
-confiáveis, gera conteúdo de revisão (cards, perguntas, jogos) e monta uma
-rotina de estudo personalizada — verificando periodicamente, inclusive por
-meio de testes orais avaliados por IA, o quanto foi de fato assimilado.
+---
 
-## Stack inicial
+## O que é o Recorda
 
-- Kotlin + Jetpack Compose + Material 3
-- Gradle version catalog (`gradle/libs.versions.toml`)
-- Retrofit + OkHttp + Gson + Coroutines — para chamar a API do Gemini
-  (geração de conteúdo e busca de fontes), atrás de uma abstração própria
-- `SpeechRecognizer` / `TextToSpeech` nativos do Android — testes orais e
-  lembretes falados (on-device, sem custo de API)
-- Algoritmo de repetição espaçada — a definir entre SM-2 (mais simples,
-  bom para começar) e FSRS (mais moderno)
+Recorda é um app Android de estudo personalizado que combina geração de conteúdo por IA com métodos cognitivos validados pela literatura de aprendizagem. O objetivo é simples: o usuário informa o tema que quer aprender, e o app se encarrega do resto — gerar o material, montar a rotina de revisão e verificar periodicamente o quanto foi assimilado de verdade.
 
-Combinação escolhida para manter o projeto **sem custo recorrente**, focado
-em uso pessoal — ver `App_Aprendizado_TDAH_Conceito_Inicial.docx` em
-Documentos para o detalhamento de cada ferramenta e seus trade-offs.
+O foco inicial é em **flashcards gerados automaticamente via Gemini**, com expansão planejada para testes orais avaliados por IA, mapas mentais e rotinas de revisão espaçada.
+
+---
+
+## Fundamentos pedagógicos
+
+O Recorda não é apenas um gerador de conteúdo — a mecânica do app é construída sobre técnicas com evidência científica sólida:
+
+| Técnica | O que é | Por que está no Recorda |
+|---|---|---|
+| **Recuperação ativa** | Tentar lembrar a informação em vez de apenas relê-la | Flashcards e testes orais forçam evocação, não reconhecimento |
+| **Repetição espaçada** | Revisar na frequência certa para o esquecimento | Algoritmo SM-2 / FSRS agenda revisões antes que o conteúdo se perca |
+| **Chunking** | Agrupar informações relacionadas em unidades menores | O Gemini divide o tema em cards atômicos — um conceito por vez |
+| **Codificação dual** | Combinar texto e imagem/áudio para fixação mais forte | Testes orais (fala + escuta) ampliam os canais de codificação |
+| **Elaboração** | Conectar novo conteúdo ao que já se sabe | Prompts do Gemini incluem contexto e analogias, não apenas definições |
+| **Externalização de estrutura** | Colocar o conhecimento "fora da cabeça" | Os cards e mapas mentais tornam a estrutura do tema visível e navegável |
+
+Pessoas com TDAH frequentemente têm dificuldade com memória de trabalho e autorregulação do estudo. O Recorda endereça isso removendo atrito (basta digitar o tema), automatizando a agenda de revisão e tornando o progresso visível.
+
+---
+
+## Features atuais
+
+- **Geração de flashcards via Gemini** — o usuário digita um tema e o app gera 5 flashcards no formato `Pergunta / Resposta` usando a API `generateContent`
+- **Persistência offline-first** — flashcards salvos localmente via Room; temas ficam na fila (`PENDING`) se o dispositivo estiver sem internet e são sincronizados automaticamente quando a conexão retorna via WorkManager
+- **Retry automático** — `GenerateContentWorker` com backoff exponencial reprocessa tópicos pendentes assim que há rede disponível
+- **Validação de input** — detecção de tema vazio e duplicado antes de chamar a API
+- **Swap Pattern** — `GeminiService`, `AnalyticsTracker` e `CrashReporter` são interfaces; debug usa implementações que só logam, release usa Firebase Analytics e Crashlytics
+- **Observabilidade** — Timber (debug tree / Crashlytics tree), LeakCanary no debug, Chucker para inspeção de rede no debug
+- **Dynamic feature** — módulo `:feature:review_session` como template para futuras features entregues sob demanda via Play Feature Delivery
+
+---
+
+## Roadmap
+
+- [ ] Algoritmo de repetição espaçada (SM-2 ou FSRS) para agendar revisões
+- [ ] Testes orais — `SpeechRecognizer` captura a resposta falada, Gemini avalia
+- [ ] `TextToSpeech` para leitura em voz alta dos cards
+- [ ] Mapa mental gerado a partir dos flashcards de um tema
+- [ ] Estatísticas de retenção por tema
+
+---
+
+## Arquitetura
+
+```
+:app                    — telas, ViewModels, domínio, dados, DI, Application
+:core:mvi               — framework MVI genérico (ScreenUiState / UiState / UiEvent / UiEffect)
+:core:network           — Retrofit + OkHttp + Gson + ServiceExecutor + NetworkError
+:core:ui                — ProcessContainer, LoadingScreen, tema compartilhado
+:lint                   — regras Lint customizadas (NoAndroidLog, A11yHardcodedColor)
+:macrobenchmark         — benchmarks de startup e renderização
+:feature:review_session — módulo dinâmico (template para futuras features)
+```
+
+O `:app` segue arquitetura **MVI + Hilt + Clean Architecture** em camadas:
+
+```
+presentation/  → ViewModel (UiState / UiEvent / UiEffect) + Composables + Navigation
+domain/        → modelos, repositórios (interfaces), use cases
+data/          → Room (offline-first), Retrofit/Gemini, mappers, WorkManager
+di/            → DataModule, DomainModule + módulos de swap debug/release
+```
+
+### Swap Pattern
+
+Interfaces implementadas de forma diferente por variante de build:
+
+| Interface | Debug | Release |
+|---|---|---|
+| `GeminiService` | `RetrofitGeminiService` | `RetrofitGeminiService` |
+| `AnalyticsTracker` | `LoggingAnalyticsTracker` (Timber) | `FirebaseAnalyticsTracker` |
+| `CrashReporter` | `LoggingCrashReporter` (Timber) | `CrashlyticsReporter` |
+
+---
+
+## Stack técnico
+
+| Camada | Tecnologia |
+|---|---|
+| UI | Kotlin + Jetpack Compose + Material 3 |
+| Navegação | Navigation Compose |
+| DI | Hilt + KSP |
+| Rede | Retrofit + OkHttp + Gson + Chucker (debug) |
+| IA | Google Gemini API (`generateContent`) |
+| Persistência | Room + WorkManager |
+| Observabilidade | Timber + Firebase Crashlytics + Firebase Analytics + Firebase Performance + LeakCanary |
+| Qualidade | detekt + ktlint + Android Lint + dependencyGuard + OWASP dependency-check |
+| Hooks | lefthook (pre-commit: ktlint / detekt / testes; pre-push: lint) |
+| CI/CD | GitHub Actions (em configuração) |
+
+Stack escolhida para manter o projeto **sem custo recorrente** em uso pessoal: Gemini API tem tier gratuito generoso, Firebase tem plano Spark gratuito, e todo o processamento de áudio é on-device via APIs nativas do Android.
+
+---
 
 ## Configuração local
 
-A chave da API do Gemini é gratuita e não é commitada. Gere a sua em
-https://aistudio.google.com/apikey e cole em `local.properties`:
+### 1. Chave da API do Gemini
 
-```
+Gratuita — gere a sua em https://aistudio.google.com/apikey e adicione ao `local.properties` (não commitado):
+
+```properties
 gemini.api.key=SUA_CHAVE_AQUI
 ```
 
-Ela é exposta ao código via `BuildConfig.GEMINI_API_KEY` (lida no
-`app/build.gradle.kts`, mesmo padrão de segredos usado no UrlShortener).
+Exposta ao código via `BuildConfig.GEMINI_API_KEY`.
 
-Projeto recém-criado — esqueleto mínimo para começar a evoluir a partir daqui.
+### 2. Chave NVD (opcional — apenas para scans OWASP)
+
+```properties
+nvd.apiKey=SUA_CHAVE_NVD
+```
+
+Gratuita em https://nvd.nist.gov/developers/request-an-api-key. Sem ela o scan OWASP ainda funciona, mas mais lento.
+
+### 3. Build
+
+```bash
+./gradlew :app:assembleDebug
+```
+
+---
+
+## Qualidade
+
+```bash
+./gradlew ktlintCheck          # formatação
+./gradlew detekt               # análise estática
+./gradlew :app:lintDebug       # lint Android
+./gradlew validateModuleGraph  # garante que :core não depende de :app
+./gradlew dependencyGuard      # detecta mudanças no grafo de dependências
+./gradlew dependencyCheckAggregate  # scan OWASP CVE (requer nvd.apiKey)
+```
