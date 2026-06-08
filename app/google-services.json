@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "000000000000",
-    "project_id": "recorda-placeholder",
-    "storage_bucket": "recorda-placeholder.firebasestorage.app"
+    "project_number": "1060444013204",
+    "project_id": "recorda-9a6e6",
+    "storage_bucket": "recorda-9a6e6.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "mobilesdk_app_id": "1:1060444013204:android:02e5ae41b0c22a0180aa81",
         "android_client_info": {
           "package_name": "com.samuelribeiro.recorda"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "PLACEHOLDER_REPLACE_WITH_REAL_FIREBASE_CONFIG"
+          "current_key": "AIzaSyAf4DBTXsg0TnoeBDA1HdeH7eBHtOG_ues"
         }
       ],
       "services": {
