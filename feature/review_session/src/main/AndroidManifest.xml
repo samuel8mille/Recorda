@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:dist="http://schemas.android.com/apk/distribution">
+
+    <!--
+    Módulo dinâmico de exemplo: entregue sob demanda via Play Feature Delivery.
+    Serve de modelo para futuras features (ex.: geração de mapas mentais,
+    áudio-resumos) que não precisam estar no APK base.
+    -->
+    <dist:module
+        dist:instant="false"
+        dist:title="@string/title_review_session">
+        <dist:delivery>
+            <dist:on-demand />
+        </dist:delivery>
+        <dist:fusing dist:include="true" />
+    </dist:module>
+
+    <application />
+</manifest>

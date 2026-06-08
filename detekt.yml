@@ -1,0 +1,41 @@
+complexity:
+  LongMethod:
+    threshold: 50
+  LongParameterList:
+    functionThreshold: 6
+    constructorThreshold: 8
+  CyclomaticComplexMethod:
+    threshold: 15
+  TooManyFunctions:
+    thresholdInClasses: 15
+    thresholdInFiles: 20
+
+style:
+  MagicNumber:
+    active: false
+  WildcardImport:
+    active: true
+  UnusedPrivateMember:
+    active: true
+  ReturnCount:
+    max: 4
+
+naming:
+  FunctionNaming:
+    # Permite nomes de função com backticks para testes unitários
+    functionPattern: '[a-zA-Z][a-zA-Z0-9`_]*'
+    # Exclui @Composable — funções Compose usam PascalCase por convenção
+    ignoreAnnotated:
+      - 'Composable'
+
+comments:
+  UndocumentedPublicClass:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**']
+  UndocumentedPublicFunction:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**']
+    ignoreAnnotated: ['Composable', 'Preview']
+
+build:
+  maxIssues: 0

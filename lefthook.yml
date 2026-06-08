@@ -1,0 +1,29 @@
+pre-commit:
+  parallel: true
+  commands:
+    ktlint:
+      run: ./gradlew ktlintCheck --daemon
+      fail_text: "Formatação incorreta. Rode './gradlew ktlintFormat' para corrigir automaticamente."
+    detekt:
+      run: ./gradlew detekt --daemon
+      fail_text: "detekt encontrou problemas. Verifique o relatório em build/reports/detekt."
+    unit-tests:
+      run: ./gradlew testDebugUnitTest --daemon
+      fail_text: "Testes falharam. Corrija antes de commitar."
+    actionlint:
+      run: actionlint
+      fail_text: "Erro nos workflows do GitHub Actions. Verifique .github/workflows/."
+    no-inline-comments:
+      glob: "*.kt"
+      run: >
+        grep -n "^[[:space:]]*//" {staged_files} | grep -v "://" &&
+        echo "Use KDoc (/** */) em vez de comentários com //." &&
+        exit 1 || exit 0
+      fail_text: "Comentários com // encontrados. Use KDoc (/** */) para documentação."
+
+pre-push:
+  parallel: false
+  commands:
+    lint:
+      run: ./gradlew :app:lintDebug --daemon
+      fail_text: "Lint encontrou problemas. Verifique o relatório em app/build/reports/lint-results-debug.html"

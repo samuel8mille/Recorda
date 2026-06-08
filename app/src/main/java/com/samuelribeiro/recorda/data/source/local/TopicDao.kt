@@ -1,0 +1,22 @@
+package com.samuelribeiro.recorda.data.source.local
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface TopicDao {
+    @Query("SELECT * FROM topics ORDER BY rowid DESC")
+    fun getAll(): Flow<List<TopicEntity>>
+
+    @Query("SELECT * FROM topics WHERE status = 'PENDING'")
+    suspend fun getPending(): List<TopicEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: TopicEntity)
+
+    @Query("UPDATE topics SET status = 'DONE', flashcardsJson = :flashcardsJson WHERE id = :id")
+    suspend fun markDone(id: String, flashcardsJson: String)
+}

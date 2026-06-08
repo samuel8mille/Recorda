@@ -1,4 +1,25 @@
 <resources>
     <string name="app_name">Recorda</string>
     <string name="home_tagline">Aprenda e revise no ritmo da sua memória</string>
+
+    <!-- Título do módulo dinâmico :feature:review_session, exigido na tabela
+         de recursos do módulo base pelo bundletool ao empacotar o app bundle. -->
+    <string name="title_review_session" translatable="false">Sessão de revisão</string>
+
+    <string name="state_loading">Gerando seus flashcards…</string>
+
+    <string name="topic_input_hint">Sobre o que você quer estudar?</string>
+    <string name="topic_input_error_empty">Digite um tema para gerar flashcards</string>
+    <string name="topic_input_error_duplicate">Você já tem flashcards para esse tema</string>
+    <string name="topic_button_generate_description">Gerar flashcards</string>
+    <string name="topic_list_title">Seus temas</string>
+    <string name="topic_list_empty_message">Nenhum flashcard ainda. Digite um tema acima para começar.</string>
+    <string name="topic_list_item_question_label">Pergunta:</string>
+    <string name="topic_list_item_answer_label">Resposta:</string>
+
+    <string name="error_no_internet">Sem conexão com a internet. Seu tema foi salvo e será gerado assim que você ficar online.</string>
+    <string name="error_timeout">A requisição demorou demais. Tente novamente.</string>
+    <string name="error_empty_response">A IA não retornou nenhum conteúdo. Tente novamente.</string>
+    <string name="error_http_generic">Erro do servidor (código %1$d). Tente novamente mais tarde.</string>
+    <string name="error_unknown">Algo deu errado. Tente novamente.</string>
 </resources>
