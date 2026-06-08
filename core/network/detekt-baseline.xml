@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>UndocumentedPublicFunction:NetworkModule.kt$NetworkModule$@Provides @Singleton fun provideChuckerInterceptor( @ApplicationContext context: Context, ): ChuckerInterceptor</ID>
+    <ID>UndocumentedPublicFunction:NetworkModule.kt$NetworkModule$@Provides @Singleton fun provideOkHttpClient( loggingInterceptor: HttpLoggingInterceptor, chuckerInterceptor: ChuckerInterceptor, ): OkHttpClient</ID>
+    <ID>UndocumentedPublicFunction:NetworkModule.kt$NetworkModule$@Provides @Singleton fun provideRetrofit( okHttpClient: OkHttpClient, @Named("baseUrl") baseUrl: String, ): Retrofit</ID>
+    <ID>UndocumentedPublicFunction:NetworkModule.kt$NetworkModule$@Provides @Singleton fun provideServiceExecutor(): ServiceExecutor</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,0 +1,66 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>UndocumentedPublicClass:AnalyticsEvent.kt$AnalyticsEvent</ID>
+    <ID>UndocumentedPublicClass:AnalyticsEvent.kt$AnalyticsEvent$DuplicateTopicSubmitted : AnalyticsEvent</ID>
+    <ID>UndocumentedPublicClass:AnalyticsEvent.kt$AnalyticsEvent$EmptyTopicSubmitted : AnalyticsEvent</ID>
+    <ID>UndocumentedPublicClass:AnalyticsEvent.kt$AnalyticsEvent$FlashcardsGenerated : AnalyticsEvent</ID>
+    <ID>UndocumentedPublicClass:AnalyticsEvent.kt$AnalyticsEvent$FlashcardsGenerationFailed : AnalyticsEvent</ID>
+    <ID>UndocumentedPublicClass:AnalyticsEvent.kt$AnalyticsEvent$TopicQueuedOffline : AnalyticsEvent</ID>
+    <ID>UndocumentedPublicClass:AnalyticsTracker.kt$AnalyticsTracker</ID>
+    <ID>UndocumentedPublicClass:AppDatabase.kt$AppDatabase : RoomDatabase</ID>
+    <ID>UndocumentedPublicClass:AppRoute.kt$AppRoute</ID>
+    <ID>UndocumentedPublicClass:DataModule.kt$DataModule</ID>
+    <ID>UndocumentedPublicClass:DataModule.kt$DataModule$Companion</ID>
+    <ID>UndocumentedPublicClass:FirebaseAnalyticsTracker.kt$FirebaseAnalyticsTracker : AnalyticsTracker</ID>
+    <ID>UndocumentedPublicClass:GenerateContentRequestDto.kt$GenerateContentRequestDto$ContentDto</ID>
+    <ID>UndocumentedPublicClass:GenerateContentRequestDto.kt$GenerateContentRequestDto$PartDto</ID>
+    <ID>UndocumentedPublicClass:GenerateContentResponseDto.kt$GenerateContentResponseDto$CandidateDto</ID>
+    <ID>UndocumentedPublicClass:GenerateContentResponseDto.kt$GenerateContentResponseDto$ContentDto</ID>
+    <ID>UndocumentedPublicClass:GenerateContentResponseDto.kt$GenerateContentResponseDto$PartDto</ID>
+    <ID>UndocumentedPublicClass:GenerateContentWorker.kt$GenerateContentWorker$Companion</ID>
+    <ID>UndocumentedPublicClass:MainActivity.kt$BaseActivity : ComponentActivity</ID>
+    <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity : BaseActivity</ID>
+    <ID>UndocumentedPublicClass:RecordaApplication.kt$RecordaApplication : ApplicationProvider</ID>
+    <ID>UndocumentedPublicClass:TopicDao.kt$TopicDao</ID>
+    <ID>UndocumentedPublicClass:TopicEntity.kt$TopicStatus</ID>
+    <ID>UndocumentedPublicClass:TopicViewModel.kt$TopicViewModel$ViewModelFactory</ID>
+    <ID>UndocumentedPublicFunction:AnalyticsTracker.kt$AnalyticsTracker$fun track(event: AnalyticsEvent)</ID>
+    <ID>UndocumentedPublicFunction:AppDatabase.kt$AppDatabase$abstract fun topicDao(): TopicDao</ID>
+    <ID>UndocumentedPublicFunction:CrashReporter.kt$CrashReporter$fun logTopicQueuedOffline()</ID>
+    <ID>UndocumentedPublicFunction:CrashReporter.kt$CrashReporter$fun logTopicSubmitFailed(errorType: String)</ID>
+    <ID>UndocumentedPublicFunction:CrashReporter.kt$CrashReporter$fun logTopicSubmitStarted()</ID>
+    <ID>UndocumentedPublicFunction:CrashReporter.kt$CrashReporter$fun logTopicSubmitSuccess(topic: String)</ID>
+    <ID>UndocumentedPublicFunction:CrashReporter.kt$CrashReporter$fun logValidationFailed(errorType: String)</ID>
+    <ID>UndocumentedPublicFunction:CrashReporter.kt$CrashReporter$fun logWorkerSyncFailed()</ID>
+    <ID>UndocumentedPublicFunction:CrashReporter.kt$CrashReporter$fun logWorkerSyncStarted(pendingCount: Int)</ID>
+    <ID>UndocumentedPublicFunction:CrashReporter.kt$CrashReporter$fun logWorkerSyncSuccess()</ID>
+    <ID>UndocumentedPublicFunction:CrashReporter.kt$CrashReporter$fun setBuildType(isDebug: Boolean)</ID>
+    <ID>UndocumentedPublicFunction:CrashReporter.kt$CrashReporter$fun setLastNetworkError(errorType: String)</ID>
+    <ID>UndocumentedPublicFunction:CrashReporter.kt$CrashReporter$fun setPendingTopicsCount(count: Int)</ID>
+    <ID>UndocumentedPublicFunction:CrashReporter.kt$CrashReporter$fun setStoredTopicsCount(count: Int)</ID>
+    <ID>UndocumentedPublicFunction:DataModule.kt$DataModule$@Binds @Singleton abstract fun bindTopicRepository( impl: TopicRepositoryImpl ): TopicRepository</ID>
+    <ID>UndocumentedPublicFunction:DataModule.kt$DataModule.Companion$@Provides @Singleton @Named("baseUrl") fun provideBaseUrl(): String</ID>
+    <ID>UndocumentedPublicFunction:DataModule.kt$DataModule.Companion$@Provides @Singleton @Named("debugMode") fun provideDebugMode(): Boolean</ID>
+    <ID>UndocumentedPublicFunction:DataModule.kt$DataModule.Companion$@Provides @Singleton @Named("geminiApiKey") fun provideGeminiApiKey(): String</ID>
+    <ID>UndocumentedPublicFunction:DataModule.kt$DataModule.Companion$@Provides @Singleton fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase</ID>
+    <ID>UndocumentedPublicFunction:DataModule.kt$DataModule.Companion$@Provides @Singleton fun provideGeminiApi(retrofit: Retrofit): GeminiApi</ID>
+    <ID>UndocumentedPublicFunction:DataModule.kt$DataModule.Companion$@Provides @Singleton fun provideGeminiService(impl: RetrofitGeminiService): GeminiService</ID>
+    <ID>UndocumentedPublicFunction:DataModule.kt$DataModule.Companion$@Provides @Singleton fun provideGson(): Gson</ID>
+    <ID>UndocumentedPublicFunction:DataModule.kt$DataModule.Companion$@Provides @Singleton fun provideTopicDao(database: AppDatabase): TopicDao</ID>
+    <ID>UndocumentedPublicFunction:DataModule.kt$DataModule.Companion$@Provides @Singleton fun provideWorkManager(@ApplicationContext context: Context): WorkManager</ID>
+    <ID>UndocumentedPublicFunction:DomainModule.kt$DomainModule$@Provides fun provideGenerateFlashcardsUseCase( repository: TopicRepository ): GenerateFlashcardsUseCase</ID>
+    <ID>UndocumentedPublicFunction:DomainModule.kt$DomainModule$@Provides fun provideGetStoredTopicsUseCase( repository: TopicRepository ): GetStoredTopicsUseCase</ID>
+    <ID>UndocumentedPublicFunction:FlashcardMapper.kt$FlashcardMapper$fun toFlashcards(rawText: String): List&lt;Flashcard&gt;</ID>
+    <ID>UndocumentedPublicFunction:GeminiApi.kt$GeminiApi$@POST("v1beta/models/gemini-flash-latest:generateContent") suspend fun generateContent( @Query("key") apiKey: String, @Body request: GenerateContentRequestDto, ): Response&lt;GenerateContentResponseDto&gt;</ID>
+    <ID>UndocumentedPublicFunction:GetStoredTopicsUseCase.kt$GetStoredTopicsUseCase$operator fun invoke(): Flow&lt;List&lt;Topic&gt;&gt;</ID>
+    <ID>UndocumentedPublicFunction:TopicDao.kt$TopicDao$@Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insert(entity: TopicEntity)</ID>
+    <ID>UndocumentedPublicFunction:TopicDao.kt$TopicDao$@Query("SELECT * FROM topics ORDER BY rowid DESC") fun getAll(): Flow&lt;List&lt;TopicEntity&gt;&gt;</ID>
+    <ID>UndocumentedPublicFunction:TopicDao.kt$TopicDao$@Query("SELECT * FROM topics WHERE status = 'PENDING'") suspend fun getPending(): List&lt;TopicEntity&gt;</ID>
+    <ID>UndocumentedPublicFunction:TopicDao.kt$TopicDao$@Query("UPDATE topics SET status = 'DONE', flashcardsJson = :flashcardsJson WHERE id = :id") suspend fun markDone(id: String, flashcardsJson: String)</ID>
+    <ID>UndocumentedPublicFunction:TopicEntityMapper.kt$TopicEntityMapper$fun toDomain(entity: TopicEntity): Topic</ID>
+    <ID>UndocumentedPublicFunction:TopicEntityMapper.kt$TopicEntityMapper$fun toEntity(topic: Topic, status: TopicStatus = TopicStatus.DONE): TopicEntity</ID>
+    <ID>UndocumentedPublicFunction:TopicViewModel.kt$TopicViewModel.ViewModelFactory$fun create(initialState: TopicUiState): TopicViewModel</ID>
+  </CurrentIssues>
+</SmellBaseline>

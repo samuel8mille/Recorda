@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>UndocumentedPublicClass:A11yHardcodedColorDetector.kt$A11yHardcodedColorDetector$Companion</ID>
+    <ID>UndocumentedPublicClass:NoAndroidLogDetector.kt$NoAndroidLogDetector$Companion</ID>
+    <ID>UndocumentedPublicClass:RecordaIssueRegistry.kt$RecordaIssueRegistry : IssueRegistry</ID>
+  </CurrentIssues>
+</SmellBaseline>

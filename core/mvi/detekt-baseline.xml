@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>UndocumentedPublicFunction:UiEffect.kt$UiEffect$suspend fun sendEffect(effect: T)</ID>
+    <ID>UndocumentedPublicFunction:UiEvent.kt$UiEvent$suspend fun sendEvent(event: T)</ID>
+    <ID>UndocumentedPublicFunction:UiState.kt$UiState$fun hideError()</ID>
+    <ID>UndocumentedPublicFunction:UiState.kt$UiState$fun hideLoading()</ID>
+    <ID>UndocumentedPublicFunction:UiState.kt$UiState$fun setState(block: ProcessUiState&lt;T&gt;.() -&gt; ProcessUiState&lt;T&gt;)</ID>
+    <ID>UndocumentedPublicFunction:UiState.kt$UiState$fun showError(error: ErrorUiState)</ID>
+    <ID>UndocumentedPublicFunction:UiState.kt$UiState$fun showLoading(loading: LoadingUiState)</ID>
+  </CurrentIssues>
+</SmellBaseline>

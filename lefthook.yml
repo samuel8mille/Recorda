@@ -11,7 +11,7 @@ pre-commit:
       run: ./gradlew testDebugUnitTest --daemon
       fail_text: "Testes falharam. Corrija antes de commitar."
     actionlint:
-      run: actionlint
+      run: '[ -d .github/workflows ] && actionlint || echo "Sem workflows ainda, actionlint ignorado."'
       fail_text: "Erro nos workflows do GitHub Actions. Verifique .github/workflows/."
     no-inline-comments:
       glob: "*.kt"
