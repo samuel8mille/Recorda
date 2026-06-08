@@ -2,118 +2,351 @@ name: CI
 
 on:
   push:
-    branches: [master, main]
+    branches: [master, 'release/**', 'hotfix/**']
   pull_request:
-    branches: [master, main]
+    branches: [master]
 
+permissions:
+  contents: read
+
+# Cancela execuções anteriores em andamento no mesmo branch/PR — evita
+# gastar minutos de CI rodando uma versão já obsoleta do código.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# ─── SETUP REUTILIZÁVEL ──────────────────────────────────────────────────────
+# Todos os jobs repetem os mesmos 4 steps de setup porque cada job roda
+# num runner isolado. O cache do Gradle evita re-download de dependências.
+
 jobs:
-  quality:
-    name: Quality (ktlint + detekt)
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # PRE-FLIGHT — decide se vale a pena rodar a pipeline pesada.
+  # Mudanças que não tocam em código (ex.: só docs/configs irrelevantes)
+  # pulam direto os quality gates e o build.
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  pre-flight-check:
+    name: Pre-flight Check
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      should_continue: ${{ steps.should_continue.outputs.should_continue }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect relevant changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            src:
+              - 'app/**'
+              - 'core/**'
+              - 'feature/**'
+              - 'lint/**'
+              - 'macrobenchmark/**'
+              - '**/*.gradle.kts'
+              - 'gradle/libs.versions.toml'
+              - 'cliff.toml'
+              - '.github/workflows/**'
+      - name: Decide whether to continue
+        id: should_continue
+        run: |
+          if [[ "${{ steps.changes.outputs.src }}" == "true" ]]; then
+            echo "should_continue=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_continue=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️ Sem mudanças relevantes — pulando quality gates e build" | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # QUALITY GATES — rodam em paralelo, falham rápido
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  module-graph:
+    name: Module Graph
+    runs-on: ubuntu-latest
+    needs: [pre-flight-check]
+    if: needs.pre-flight-check.outputs.should_continue == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: temurin
-          cache: gradle
+        with: { java-version: '17', distribution: 'temurin' }
+      - uses: gradle/actions/setup-gradle@v4
       - name: Decode google-services.json
-        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
-      - run: ./gradlew ktlintCheck detekt --continue
+        env: { GOOGLE_SERVICES_JSON: '${{ secrets.GOOGLE_SERVICES_JSON }}' }
+        run: echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+      - run: ./gradlew validateModuleGraph
+
+  code-style:
+    name: Code Style (ktlint)
+    runs-on: ubuntu-latest
+    needs: [pre-flight-check]
+    if: needs.pre-flight-check.outputs.should_continue == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { java-version: '17', distribution: 'temurin' }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Decode google-services.json
+        env: { GOOGLE_SERVICES_JSON: '${{ secrets.GOOGLE_SERVICES_JSON }}' }
+        run: echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+      - run: ./gradlew ktlintCheck
+
+  static-analysis:
+    name: Static Analysis (detekt)
+    runs-on: ubuntu-latest
+    needs: [pre-flight-check]
+    if: needs.pre-flight-check.outputs.should_continue == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { java-version: '17', distribution: 'temurin' }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Decode google-services.json
+        env: { GOOGLE_SERVICES_JSON: '${{ secrets.GOOGLE_SERVICES_JSON }}' }
+        run: echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+      - run: ./gradlew detekt
 
   lint:
     name: Android Lint
     runs-on: ubuntu-latest
+    needs: [pre-flight-check]
+    if: needs.pre-flight-check.outputs.should_continue == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: temurin
-          cache: gradle
+        with: { java-version: '17', distribution: 'temurin' }
+      - uses: gradle/actions/setup-gradle@v4
       - name: Decode google-services.json
-        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
-      - run: ./gradlew :app:lintDebug
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: lint-report
-          path: app/build/reports/lint-results-debug.html
+        env: { GOOGLE_SERVICES_JSON: '${{ secrets.GOOGLE_SERVICES_JSON }}' }
+        run: echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+      - run: ./gradlew lintDebug
 
-  test:
-    name: Unit tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: temurin
-          cache: gradle
-      - name: Decode google-services.json
-        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
-      - run: ./gradlew testDebugUnitTest
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: test-reports
-          path: '**/build/reports/tests/'
+  # ═══════════════════════════════════════════════════════════════════════════
+  # TESTS — cobertura postada como comentário no PR
+  # ═══════════════════════════════════════════════════════════════════════════
 
-  dependency-guard:
-    name: Dependency Guard
+  unit-tests:
+    name: Unit Tests + Coverage
     runs-on: ubuntu-latest
+    needs: [pre-flight-check]
+    if: needs.pre-flight-check.outputs.should_continue == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: temurin
-          cache: gradle
+        with: { java-version: '17', distribution: 'temurin' }
+      - uses: gradle/actions/setup-gradle@v4
       - name: Decode google-services.json
-        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
-      - run: ./gradlew dependencyGuard
-
-  build:
-    name: Build debug APK
-    runs-on: ubuntu-latest
-    needs: [quality, lint, test]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+        env: { GOOGLE_SERVICES_JSON: '${{ secrets.GOOGLE_SERVICES_JSON }}' }
+        run: echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+      - run: ./gradlew testDebugUnitTest createDebugUnitTestCoverageReport
+      - name: Coverage summary
+        run: |
+          python3 - <<'EOF'
+          import xml.etree.ElementTree as ET, os, sys
+          path = "app/build/reports/coverage/test/debug/report.xml"
+          if not os.path.exists(path):
+              sys.exit(0)
+          root = ET.parse(path).getroot()
+          lines = ["## 📊 Test Coverage\n", "| Counter | Covered | Total | % |", "|---|---|---|---|"]
+          for ctype in ["INSTRUCTION", "LINE", "BRANCH", "METHOD", "CLASS"]:
+              c = root.find(f"counter[@type='{ctype}']")
+              if c is None: continue
+              missed, covered = int(c.get("missed", 0)), int(c.get("covered", 0))
+              total = missed + covered
+              pct = round(covered * 100 / total, 1) if total else 0
+              icon = "✅" if pct >= 70 else "⚠️"
+              lines.append(f"| {ctype.capitalize()} | {covered} | {total} | {icon} {pct}% |")
+          content = "\n".join(lines)
+          print(content)
+          summary = os.environ.get("GITHUB_STEP_SUMMARY", "")
+          if summary:
+              open(summary, "a").write(content + "\n")
+          EOF
+      - name: Report coverage on PR
+        uses: madrapps/jacoco-report@v1.7.1
         with:
-          java-version: '17'
-          distribution: temurin
-          cache: gradle
-      - name: Decode google-services.json
-        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
-      - run: ./gradlew :app:assembleDebug
-      - uses: actions/upload-artifact@v4
+          paths: app/build/reports/coverage/test/debug/report.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 70
+          min-coverage-changed-files: 80
+          title: Unit Test Coverage
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
         with:
-          name: debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: coverage-report
+          path: app/build/reports/coverage/test/debug/
           retention-days: 7
 
-  sonar:
-    name: SonarCloud
+  # ═══════════════════════════════════════════════════════════════════════════
+  # SCREENSHOT TESTS — detecta regressões visuais nos composables
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  screenshot-tests:
+    name: Screenshot Tests (Roborazzi)
     runs-on: ubuntu-latest
-    needs: [quality, lint, test]
+    needs: [pre-flight-check]
+    if: needs.pre-flight-check.outputs.should_continue == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { java-version: '17', distribution: 'temurin' }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Decode google-services.json
+        env: { GOOGLE_SERVICES_JSON: '${{ secrets.GOOGLE_SERVICES_JSON }}' }
+        run: echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+      - run: ./gradlew :core:ui:testDebugUnitTest --tests "*.screenshot.*"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # SONARCLOUD — análise de qualidade e cobertura no sonarcloud.io
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  sonarcloud:
+    name: SonarCloud Analysis
+    needs: [pre-flight-check, unit-tests]
+    runs-on: ubuntu-latest
+    if: needs.pre-flight-check.outputs.should_continue == 'true'
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: temurin
-          cache: gradle
+        with: { java-version: '17', distribution: 'temurin' }
+      - uses: gradle/actions/setup-gradle@v4
       - name: Decode google-services.json
-        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
-      - name: Build, test and analyze
-        run: ./gradlew :app:lintDebug testDebugUnitTest createDebugUnitTestCoverageReport sonar
+        env: { GOOGLE_SERVICES_JSON: '${{ secrets.GOOGLE_SERVICES_JSON }}' }
+        run: echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+      - name: Build and generate coverage report
+        run: ./gradlew assembleDebug testDebugUnitTest createDebugUnitTestCoverageReport
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # MACROBENCHMARK — apenas verifica compilação no CI
+  # Os benchmarks reais precisam de device físico (./gradlew :macrobenchmark:connectedBenchmarkAndroidTest)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  macrobenchmark:
+    name: Macrobenchmark (compile check)
+    runs-on: ubuntu-latest
+    needs: [pre-flight-check]
+    if: needs.pre-flight-check.outputs.should_continue == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { java-version: '17', distribution: 'temurin' }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Decode google-services.json
+        env: { GOOGLE_SERVICES_JSON: '${{ secrets.GOOGLE_SERVICES_JSON }}' }
+        run: echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+      - run: ./gradlew :macrobenchmark:compileBenchmarkKotlin
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # SECURITY — dependency-review em PRs / dependency-submission em push
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  dependency-review:
+    name: Dependency Review (CVE)
+    runs-on: ubuntu-latest
+    needs: [pre-flight-check]
+    if: needs.pre-flight-check.outputs.should_continue == 'true' && github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+
+  dependency-submission:
+    name: Dependency Graph Submission
+    runs-on: ubuntu-latest
+    needs: [pre-flight-check]
+    if: |
+      needs.pre-flight-check.outputs.should_continue == 'true' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { java-version: '17', distribution: 'temurin' }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Decode google-services.json
+        env: { GOOGLE_SERVICES_JSON: '${{ secrets.GOOGLE_SERVICES_JSON }}' }
+        run: echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+      - uses: gradle/actions/dependency-submission@v4
+
+  dependency-guard:
+    name: Dependency Guard
+    runs-on: ubuntu-latest
+    needs: [pre-flight-check]
+    if: needs.pre-flight-check.outputs.should_continue == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { java-version: '17', distribution: 'temurin' }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Decode google-services.json
+        env: { GOOGLE_SERVICES_JSON: '${{ secrets.GOOGLE_SERVICES_JSON }}' }
+        run: echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+      - run: ./gradlew :app:dependencyGuard
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # BUILD — só roda quando todos os quality gates e testes passam
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  build:
+    name: Build APK
+    needs: [pre-flight-check, module-graph, code-style, static-analysis, lint, unit-tests, screenshot-tests, dependency-review, dependency-guard, sonarcloud]
+    runs-on: ubuntu-latest
+    if: |
+      always() &&
+      needs.pre-flight-check.outputs.should_continue == 'true' &&
+      needs.module-graph.result == 'success' &&
+      needs.code-style.result == 'success' &&
+      needs.static-analysis.result == 'success' &&
+      needs.lint.result == 'success' &&
+      needs.unit-tests.result == 'success' &&
+      needs.screenshot-tests.result == 'success' &&
+      needs.dependency-guard.result == 'success' &&
+      needs.sonarcloud.result == 'success' &&
+      (needs.dependency-review.result == 'success' || needs.dependency-review.result == 'skipped')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { java-version: '17', distribution: 'temurin' }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Decode google-services.json
+        env: { GOOGLE_SERVICES_JSON: '${{ secrets.GOOGLE_SERVICES_JSON }}' }
+        run: echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+      - run: ./gradlew assembleDebug
+      - name: Check APK size
+        run: |
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          SIZE_KB=$(du -k "$APK" | cut -f1)
+          SIZE_MB=$(echo "scale=1; $SIZE_KB / 1024" | bc)
+          echo "APK size: ${SIZE_MB} MB" | tee -a "$GITHUB_STEP_SUMMARY"
+          if [ "$SIZE_KB" -gt 25600 ]; then
+            echo "::error::APK size ${SIZE_MB} MB exceeded limit of 25 MB"
+            exit 1
+          fi
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
+
+  # Release é disparado manualmente via workflow_dispatch no release.yml
