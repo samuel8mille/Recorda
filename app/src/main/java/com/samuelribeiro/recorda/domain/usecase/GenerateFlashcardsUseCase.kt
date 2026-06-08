@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Use case responsible for generating flashcards for a study topic.
  *
- * @property repository The repository that provides flashcard generation.
+ * @param repository The repository that provides flashcard generation.
  */
 class GenerateFlashcardsUseCase(
     private val repository: TopicRepository,
@@ -15,6 +15,7 @@ class GenerateFlashcardsUseCase(
     /**
      * Executes flashcard generation for [topicName].
      *
+     * @param topicName The study topic the user submitted.
      * @return A [Flow] emitting a single [Result] with either the [Topic] on success or a
      *   [com.samuelribeiro.recorda.core.network.NetworkError] on failure.
      */

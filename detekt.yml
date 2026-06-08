@@ -36,6 +36,10 @@ comments:
     active: true
     excludes: ['**/test/**', '**/androidTest/**']
     ignoreAnnotated: ['Composable', 'Preview']
+  OutdatedDocumentation:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**']
+    allowParamOnConstructorProperties: true
 
 build:
   maxIssues: 0

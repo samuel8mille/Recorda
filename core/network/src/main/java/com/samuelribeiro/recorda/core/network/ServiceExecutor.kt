@@ -28,10 +28,13 @@ class ServiceExecutor(
     /**
      * Executes [block] and emits its result, retrying on transient failures.
      *
+     * @param T Type of the successful result value.
      * @param retries Maximum number of retry attempts before emitting failure.
      * @param isIdempotent Whether the request is safe to retry on timeouts and I/O errors.
      * @param block Suspend lambda that performs the network call and returns [T] directly,
      *              throwing a [NetworkError] subtype on any failure.
+     * @return A cold [Flow] that emits a single [Result] — success wrapping [T] or failure
+     *         wrapping a [NetworkError].
      */
     fun <T> execute(
         retries: Int = 2,

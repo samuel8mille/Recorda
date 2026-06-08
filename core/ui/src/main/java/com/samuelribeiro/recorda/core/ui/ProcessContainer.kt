@@ -7,6 +7,7 @@ import com.samuelribeiro.recorda.core.mvi.ScreenUiState
 /**
  * Shows [LoadingScreen] while [uiState].loading is non-null; otherwise renders [content].
  *
+ * @param T The concrete [ScreenUiState] type managed by this container.
  * @param uiState Current process state driving the loading/content switch.
  * @param content Composable rendered when [uiState].loading is null.
  */
