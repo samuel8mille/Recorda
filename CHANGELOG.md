@@ -1,7 +1,7 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
-## [0.1.0] - 2026-06-09
+## [Unreleased]
 
 ### Bug Fixes
 
@@ -34,6 +34,12 @@ All notable changes to this project will be documented in this file.
 - **m12**: Flashcard review session screen
 - **m13**: Botão Revisar + SM-2 scheduling + extração do prompt
 - **m14**: Due-date filtering, Tudo em dia screen + changelog config
+- **m15**: Exclusão de tópico com confirmação
+- **m16**: TTS na sessão de revisão
+
+### Refactoring
+
+- **ui**: Substituir lista expandida por cards na tela de tópicos
 
 ### Style
 
