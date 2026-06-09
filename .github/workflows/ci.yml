@@ -210,7 +210,6 @@ jobs:
     name: SonarCloud Analysis
     needs: [pre-flight-check, unit-tests]
     runs-on: ubuntu-latest
-    continue-on-error: true
     if: needs.pre-flight-check.outputs.should_continue == 'true'
     steps:
       - uses: actions/checkout@v4
@@ -271,7 +270,6 @@ jobs:
   dependency-submission:
     name: Dependency Graph Submission
     runs-on: ubuntu-latest
-    continue-on-error: true
     needs: [pre-flight-check]
     if: |
       needs.pre-flight-check.outputs.should_continue == 'true' &&
