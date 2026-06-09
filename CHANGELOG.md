@@ -1,7 +1,7 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
-## [Unreleased]
+## [0.1.0] - 2026-06-09
 
 ### Bug Fixes
 
@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 - **m11**: Add 90% coverage gate to pre-commit hook
 - **m12**: Flashcard review session screen
 - **m13**: Botão Revisar + SM-2 scheduling + extração do prompt
+- **m14**: Due-date filtering, Tudo em dia screen + changelog config
 
 ### Style
 
