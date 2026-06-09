@@ -11,7 +11,7 @@ interface UiEffect<T> {
 
 /** Default [UiEffect] implementation backed by a [MutableSharedFlow]. */
 class UiEffectImpl<T> : UiEffect<T> {
-    override val effectFlow = MutableSharedFlow<T>()
+    override val effectFlow = MutableSharedFlow<T>(extraBufferCapacity = 1)
 
     override suspend fun sendEffect(effect: T) {
         effectFlow.emit(effect)

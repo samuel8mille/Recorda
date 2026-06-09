@@ -1,4 +1,5 @@
 import java.util.Properties
+import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
     alias(libs.plugins.android.application)
@@ -8,7 +9,29 @@ plugins {
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics.plugin)
     alias(libs.plugins.dependency.guard)
+    jacoco
 }
+
+val jacocoExcludes = listOf(
+    "**/di/**",
+    "**/*Module*",
+    "**/*Activity*",
+    "**/*Application*",
+    "**/composables/**",
+    "**/navigation/**",
+    "**/work/**",
+    "**/analytics/Firebase*",
+    "**/logging/Crashlytics*",
+    "**/data/source/local/**",
+    "**/data/source/remote/api/**",
+    "**/data/source/remote/dto/**",
+    "**/ui/theme/**",
+    "**/*_Impl*",
+    "**/*_Factory*",
+    "**/*_MembersInjector*",
+    "**/*Hilt*",
+    "**/presentation/utils/Compose*"
+)
 
 val localProps = Properties().apply {
     rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
@@ -51,6 +74,12 @@ android {
                 keyAlias = System.getenv("KEY_ALIAS")
                 keyPassword = System.getenv("KEY_PASSWORD")
             }
+        }
+    }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
         }
     }
 
@@ -152,6 +181,35 @@ dependencyGuard {
     configuration("releaseRuntimeClasspath")
 }
 
+tasks.register<JacocoReport>("jacocoUnitTestReport") {
+    group = "verification"
+    description = "Generates Jacoco coverage report with excluded infrastructure classes."
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        xml.outputLocation.set(
+            layout.buildDirectory.file("reports/jacoco/jacocoUnitTestReport/report.xml")
+        )
+        html.outputLocation.set(
+            layout.buildDirectory.dir("reports/jacoco/jacocoUnitTestReport/html")
+        )
+    }
+
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+    classDirectories.setFrom(
+        fileTree(layout.buildDirectory.dir("intermediates/classes/debug/transformDebugClassesWithAsm/dirs")) {
+            exclude(jacocoExcludes)
+        }
+    )
+    executionData.setFrom(
+        layout.buildDirectory.file(
+            "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"
+        )
+    )
+}
+
 /**
  * Opens the Jacoco HTML coverage report in the system browser after generating it.
  *
@@ -160,11 +218,11 @@ dependencyGuard {
 tasks.register("openCoverageReport") {
     group = "verification"
     description = "Generates and opens the unit test coverage report in the default browser."
-    dependsOn("createDebugUnitTestCoverageReport")
+    dependsOn("jacocoUnitTestReport")
     doLast {
-        val report = file("build/reports/coverage/test/debug/index.html")
+        val report = layout.buildDirectory.file("reports/jacoco/jacocoUnitTestReport/html/index.html").get().asFile
         if (!report.exists()) {
-            println("Report not found. Run ./gradlew createDebugUnitTestCoverageReport first.")
+            println("Report not found. Run ./gradlew jacocoUnitTestReport first.")
             return@doLast
         }
         val os = System.getProperty("os.name").lowercase()

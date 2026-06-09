@@ -8,8 +8,8 @@ pre-commit:
       run: ./gradlew detekt --daemon
       fail_text: "detekt encontrou problemas. Verifique o relatório em build/reports/detekt."
     unit-tests:
-      run: ./gradlew testDebugUnitTest --daemon
-      fail_text: "Testes falharam. Corrija antes de commitar."
+      run: ./gradlew jacocoUnitTestReport --daemon && ./scripts/check_coverage.sh
+      fail_text: "Testes falharam ou cobertura abaixo de 90%. Veja app/build/reports/coverage/test/debug/index.html."
     actionlint:
       run: '[ -d .github/workflows ] && actionlint || echo "Sem workflows ainda, actionlint ignorado."'
       fail_text: "Erro nos workflows do GitHub Actions. Verifique .github/workflows/."
