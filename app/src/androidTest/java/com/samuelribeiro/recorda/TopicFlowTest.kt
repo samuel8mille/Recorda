@@ -1,12 +1,14 @@
 package com.samuelribeiro.recorda
 
-import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.work.Configuration
+import androidx.work.WorkManager
 import com.samuelribeiro.recorda.data.source.local.AppDatabase
 import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.data.source.local.TopicEntity
@@ -18,6 +20,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 import javax.inject.Inject
@@ -112,6 +115,15 @@ class TopicFlowTest {
             composeRule.onAllNodesWithTag(DELETE_BUTTON_TEST_TAG)
                 .fetchSemanticsNodes()
                 .isNotEmpty()
+        }
+    }
+
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun setUpWorkManager() {
+            val context = InstrumentationRegistry.getInstrumentation().targetContext
+            runCatching { WorkManager.initialize(context, Configuration.Builder().build()) }
         }
     }
 }

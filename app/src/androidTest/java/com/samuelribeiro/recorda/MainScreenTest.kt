@@ -4,10 +4,14 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.work.Configuration
+import androidx.work.WorkManager
 import com.samuelribeiro.recorda.presentation.ui.topic.composables.TOPIC_INPUT_TEST_TAG
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 
@@ -23,6 +27,15 @@ class MainScreenTest {
     @Before
     fun setUp() {
         hiltRule.inject()
+    }
+
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun setUpWorkManager() {
+            val context = InstrumentationRegistry.getInstrumentation().targetContext
+            runCatching { WorkManager.initialize(context, Configuration.Builder().build()) }
+        }
     }
 
     @Test
