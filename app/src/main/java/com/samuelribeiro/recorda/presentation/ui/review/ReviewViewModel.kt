@@ -9,7 +9,10 @@ import com.samuelribeiro.recorda.core.mvi.UiEventImpl
 import com.samuelribeiro.recorda.core.mvi.UiState
 import com.samuelribeiro.recorda.core.mvi.UiStateImpl
 import com.samuelribeiro.recorda.domain.model.CardRating
+import com.samuelribeiro.recorda.domain.model.FlashcardReviewState
+import com.samuelribeiro.recorda.domain.usecase.GetFlashcardReviewsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetTopicUseCase
+import com.samuelribeiro.recorda.domain.usecase.UpdateCardScheduleUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -20,12 +23,16 @@ import kotlinx.coroutines.launch
  * ViewModel for the review session screen.
  *
  * @param topicId The ID of the topic whose flashcards will be reviewed.
- * @param getTopicUseCase Use case that observes the topic and its flashcards from the local DB.
+ * @param getTopicUseCase Observes the topic and its flashcards from the local DB.
+ * @param getFlashcardReviewsUseCase Loads saved SM-2 states for this topic's cards.
+ * @param updateCardScheduleUseCase Schedules a rated card via SM-2 and persists the result.
  */
 @HiltViewModel(assistedFactory = ReviewViewModel.ViewModelFactory::class)
 class ReviewViewModel @AssistedInject constructor(
     @Assisted private val topicId: String,
     private val getTopicUseCase: GetTopicUseCase,
+    private val getFlashcardReviewsUseCase: GetFlashcardReviewsUseCase,
+    private val updateCardScheduleUseCase: UpdateCardScheduleUseCase,
 ) : ViewModel(),
     UiState<ReviewUiState> by UiStateImpl(ReviewUiState()),
     UiEvent<ReviewUiEvent> by UiEventImpl(),
@@ -38,9 +45,12 @@ class ReviewViewModel @AssistedInject constructor(
         fun create(topicId: String): ReviewViewModel
     }
 
+    private val reviewStates = mutableMapOf<Int, FlashcardReviewState>()
+
     init {
         observeTopic()
         handleEvents()
+        loadReviewStates()
     }
 
     private fun observeTopic() {
@@ -65,16 +75,28 @@ class ReviewViewModel @AssistedInject constructor(
         }
     }
 
+    private fun loadReviewStates() {
+        viewModelScope.launch {
+            getFlashcardReviewsUseCase(topicId).forEach { state ->
+                reviewStates[state.cardIndex] = state
+            }
+        }
+    }
+
     private fun onFlipCard() {
         setState { copy(content = content.copy(isFlipped = !content.isFlipped)) }
     }
 
-    private fun onRateCard(rating: CardRating) {
+    private suspend fun onRateCard(rating: CardRating) {
         val current = stateFlow.value.content
+        val currentIndex = current.currentIndex
+        val currentState = reviewStates[currentIndex] ?: FlashcardReviewState(cardIndex = currentIndex)
+        val updated = updateCardScheduleUseCase(topicId, currentState, rating)
+        reviewStates[currentIndex] = updated
         when (rating) {
             CardRating.AGAIN -> setState { copy(content = current.copy(isFlipped = false)) }
             CardRating.GOOD, CardRating.EASY -> {
-                val nextIndex = current.currentIndex + 1
+                val nextIndex = currentIndex + 1
                 if (nextIndex >= current.flashcards.size) {
                     setState { copy(content = current.copy(isSessionComplete = true)) }
                 } else {

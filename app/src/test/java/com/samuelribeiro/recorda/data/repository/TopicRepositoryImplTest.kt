@@ -13,6 +13,7 @@ import com.samuelribeiro.recorda.data.source.local.TopicEntity
 import com.samuelribeiro.recorda.data.source.local.TopicStatus
 import com.samuelribeiro.recorda.data.source.remote.service.GeminiService
 import com.samuelribeiro.recorda.domain.model.Flashcard
+import com.samuelribeiro.recorda.domain.prompt.FlashcardPromptBuilder
 import com.samuelribeiro.recorda.logging.CrashReporter
 import com.samuelribeiro.recorda.util.MainDispatcherRule
 import io.mockk.coEvery
@@ -43,6 +44,9 @@ class TopicRepositoryImplTest {
     private val topicDao: TopicDao = mockk(relaxed = true)
     private val workManager: WorkManager = mockk(relaxed = true)
     private val crashReporter: CrashReporter = mockk(relaxed = true)
+    private val promptBuilder: FlashcardPromptBuilder = mockk {
+        every { build(any()) } answers { "prompt for ${firstArg<String>()}" }
+    }
 
     private val serviceExecutor by lazy {
         ServiceExecutor(ioDispatcher = mainDispatcherRule.testDispatcher)
@@ -57,6 +61,7 @@ class TopicRepositoryImplTest {
             topicDao = topicDao,
             workManager = workManager,
             crashlyticsReporter = crashReporter,
+            promptBuilder = promptBuilder,
         )
     }
 

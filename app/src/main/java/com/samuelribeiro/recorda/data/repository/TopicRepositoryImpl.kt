@@ -15,6 +15,7 @@ import com.samuelribeiro.recorda.data.source.local.TopicEntity
 import com.samuelribeiro.recorda.data.source.local.TopicStatus
 import com.samuelribeiro.recorda.data.source.remote.service.GeminiService
 import com.samuelribeiro.recorda.domain.model.Topic
+import com.samuelribeiro.recorda.domain.prompt.FlashcardPromptBuilder
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
 import com.samuelribeiro.recorda.logging.CrashReporter
 import com.samuelribeiro.recorda.work.GenerateContentWorker
@@ -42,6 +43,7 @@ class TopicRepositoryImpl @Inject constructor(
     private val topicDao: TopicDao,
     private val workManager: WorkManager,
     private val crashlyticsReporter: CrashReporter,
+    private val promptBuilder: FlashcardPromptBuilder,
 ) : TopicRepository {
 
     override fun getStoredTopics(): Flow<List<Topic>> =
@@ -52,7 +54,7 @@ class TopicRepositoryImpl @Inject constructor(
 
     override fun generateFlashcards(topicName: String): Flow<Result<Topic>> =
         serviceExecutor.execute(isIdempotent = false) {
-            geminiService.generateContent(buildPrompt(topicName))
+            geminiService.generateContent(promptBuilder.build(topicName))
         }.map { result ->
             result.fold(
                 onSuccess = { rawText ->
@@ -100,8 +102,4 @@ class TopicRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun buildPrompt(topicName: String): String =
-        "Gere exatamente 5 flashcards de estudo sobre o tema \"$topicName\". " +
-            "Responda apenas com uma linha por flashcard, sem numeração nem texto extra, " +
-            "no formato exato: P: <pergunta> | R: <resposta>"
 }

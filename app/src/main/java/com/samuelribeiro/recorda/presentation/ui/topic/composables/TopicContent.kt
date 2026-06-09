@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -52,11 +53,13 @@ const val GENERATE_BUTTON_TEST_TAG = "GenerateButtonTestTag"
 const val INPUT_ERROR_TEST_TAG = "InputErrorTestTag"
 const val TOPIC_ITEM_TEST_TAG = "TopicItemTestTag"
 const val TOPIC_INPUT_TEST_TAG = "TopicInput"
+const val REVIEW_BUTTON_TEST_TAG = "ReviewButtonTestTag"
 
 @Composable
 fun TopicContent(
     uiState: TopicUiState,
     onGenerateFlashcardsClick: (String) -> Unit,
+    onReviewClick: (String) -> Unit,
 ) {
     val (topic, setTopic) = remember { mutableStateOf("") }
     Column(
@@ -89,7 +92,7 @@ fun TopicContent(
                 modifier = Modifier.padding(horizontal = HorizontalPadding)
             ) {
                 items(items = uiState.topics, itemContent = { item ->
-                    TopicContentListItem(item = item)
+                    TopicContentListItem(item = item, onReviewClick = onReviewClick)
                 })
             }
         }
@@ -176,21 +179,32 @@ fun TopicContentHeader(
 @Composable
 fun TopicContentListItem(
     item: Topic,
+    onReviewClick: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier
             .testTag(TOPIC_ITEM_TEST_TAG)
-            .semantics(mergeDescendants = true) {}
             .padding(vertical = ListItemVerticalPadding)
     ) {
-        Spacer(Modifier.height(SpaceMedium))
-        Text(
-            text = item.name,
-            style = MaterialTheme.typography.titleMedium,
-        )
-        item.flashcards.forEach { flashcard ->
+        Column(modifier = Modifier.semantics(mergeDescendants = true) {}) {
             Spacer(Modifier.height(SpaceMedium))
-            FlashcardRow(flashcard = flashcard)
+            Text(
+                text = item.name,
+                style = MaterialTheme.typography.titleMedium,
+            )
+            item.flashcards.forEach { flashcard ->
+                Spacer(Modifier.height(SpaceMedium))
+                FlashcardRow(flashcard = flashcard)
+            }
+        }
+        Spacer(Modifier.height(SpaceSmall))
+        OutlinedButton(
+            modifier = Modifier
+                .testTag(REVIEW_BUTTON_TEST_TAG)
+                .align(Alignment.End),
+            onClick = { onReviewClick(item.id) },
+        ) {
+            Text(stringResource(R.string.topic_review_button))
         }
         Spacer(Modifier.height(SpaceMedium))
     }

@@ -2,10 +2,15 @@ package com.samuelribeiro.recorda.presentation.ui.review
 
 import com.samuelribeiro.recorda.domain.model.CardRating
 import com.samuelribeiro.recorda.domain.model.Flashcard
+import com.samuelribeiro.recorda.domain.model.FlashcardReviewState
 import com.samuelribeiro.recorda.domain.model.Topic
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
+import com.samuelribeiro.recorda.domain.usecase.GetFlashcardReviewsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetTopicUseCase
+import com.samuelribeiro.recorda.domain.usecase.UpdateCardScheduleUseCase
 import com.samuelribeiro.recorda.util.MainDispatcherRule
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,8 +29,10 @@ class ReviewViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository: TopicRepository = mockk()
-    private val getTopicUseCase = GetTopicUseCase(repository)
+    private val topicRepository: TopicRepository = mockk()
+    private val getTopicUseCase = GetTopicUseCase(topicRepository)
+    private val getFlashcardReviews: GetFlashcardReviewsUseCase = mockk()
+    private val updateCardSchedule: UpdateCardScheduleUseCase = mockk()
 
     private val flashcards = listOf(
         Flashcard("O que é Kotlin?", "Uma linguagem JVM moderna"),
@@ -36,11 +43,21 @@ class ReviewViewModelTest {
 
     @Before
     fun setUp() {
-        every { repository.getTopic("topic1") } returns flowOf(topic)
+        every { topicRepository.getTopic("topic1") } returns flowOf(topic)
+        coEvery { getFlashcardReviews(any()) } returns emptyList()
+        coEvery { updateCardSchedule(any(), any(), any()) } answers {
+            val state = secondArg<FlashcardReviewState>()
+            state.copy(repetitions = state.repetitions + 1)
+        }
     }
 
     private fun createViewModel(topicId: String = "topic1"): ReviewViewModel =
-        ReviewViewModel(topicId = topicId, getTopicUseCase = getTopicUseCase)
+        ReviewViewModel(
+            topicId = topicId,
+            getTopicUseCase = getTopicUseCase,
+            getFlashcardReviewsUseCase = getFlashcardReviews,
+            updateCardScheduleUseCase = updateCardSchedule,
+        )
 
     @Test
     fun `init loads topic name and flashcards`() = runTest {
@@ -137,10 +154,35 @@ class ReviewViewModelTest {
 
     @Test
     fun `topic not found leaves state with default empty values`() = runTest {
-        every { repository.getTopic("missing") } returns flowOf(null)
-        val vm = ReviewViewModel(topicId = "missing", getTopicUseCase = getTopicUseCase)
+        every { topicRepository.getTopic("missing") } returns flowOf(null)
+        val vm = ReviewViewModel(
+            topicId = "missing",
+            getTopicUseCase = getTopicUseCase,
+            getFlashcardReviewsUseCase = getFlashcardReviews,
+            updateCardScheduleUseCase = updateCardSchedule,
+        )
 
         assertEquals("", vm.stateFlow.value.content.topicName)
         assertTrue(vm.stateFlow.value.content.flashcards.isEmpty())
+    }
+
+    @Test
+    fun `RateCard delegates to UpdateCardScheduleUseCase`() = runTest {
+        val vm = createViewModel()
+        vm.onSendEvent(FlipCard)
+
+        vm.onSendEvent(RateCard(CardRating.GOOD))
+
+        coVerify { updateCardSchedule("topic1", any(), CardRating.GOOD) }
+    }
+
+    @Test
+    fun `init loads review states via GetFlashcardReviewsUseCase`() = runTest {
+        val savedState = FlashcardReviewState(cardIndex = 0, repetitions = 3)
+        coEvery { getFlashcardReviews("topic1") } returns listOf(savedState)
+
+        createViewModel()
+
+        coVerify { getFlashcardReviews("topic1") }
     }
 }

@@ -65,6 +65,7 @@ fun TopicScreen(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onGenerateFlashcardsClick = { topic -> viewModel.onSendEvent(OnGenerateFlashcardsClick(topic)) },
+        onReviewClick = onNavigateToReview,
     )
 }
 
@@ -73,12 +74,14 @@ fun TopicScreen(
     uiState: ProcessUiState<TopicUiState>,
     snackbarHostState: SnackbarHostState,
     onGenerateFlashcardsClick: (String) -> Unit,
+    onReviewClick: (String) -> Unit,
 ) {
     ProcessContainer(uiState = uiState) {
         TopicScaffold(
             uiState = uiState.content,
             snackbarHostState = snackbarHostState,
             onGenerateFlashcardsClick = onGenerateFlashcardsClick,
+            onReviewClick = onReviewClick,
         )
     }
 }
@@ -89,6 +92,7 @@ fun TopicScaffold(
     uiState: TopicUiState,
     snackbarHostState: SnackbarHostState,
     onGenerateFlashcardsClick: (String) -> Unit,
+    onReviewClick: (String) -> Unit,
 ) {
     Scaffold(
         modifier = Modifier
@@ -127,6 +131,7 @@ fun TopicScaffold(
             TopicContent(
                 uiState = uiState,
                 onGenerateFlashcardsClick = onGenerateFlashcardsClick,
+                onReviewClick = onReviewClick,
             )
         }
     }
