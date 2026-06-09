@@ -5,6 +5,7 @@ import com.samuelribeiro.recorda.domain.model.Flashcard
 import com.samuelribeiro.recorda.domain.model.FlashcardReviewState
 import com.samuelribeiro.recorda.domain.model.Topic
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
+import com.samuelribeiro.recorda.domain.tts.TextToSpeechEngine
 import com.samuelribeiro.recorda.domain.usecase.GetFlashcardReviewsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetTopicUseCase
 import com.samuelribeiro.recorda.domain.usecase.UpdateCardScheduleUseCase
@@ -13,6 +14,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -33,6 +35,7 @@ class ReviewViewModelTest {
     private val getTopicUseCase = GetTopicUseCase(topicRepository)
     private val getFlashcardReviews: GetFlashcardReviewsUseCase = mockk()
     private val updateCardSchedule: UpdateCardScheduleUseCase = mockk()
+    private val ttsEngine: TextToSpeechEngine = mockk(relaxed = true)
 
     private val flashcards = listOf(
         Flashcard("O que é Kotlin?", "Uma linguagem JVM moderna"),
@@ -57,6 +60,7 @@ class ReviewViewModelTest {
             getTopicUseCase = getTopicUseCase,
             getFlashcardReviewsUseCase = getFlashcardReviews,
             updateCardScheduleUseCase = updateCardSchedule,
+            ttsEngine = ttsEngine,
         )
 
     @Test
@@ -85,6 +89,7 @@ class ReviewViewModelTest {
             getTopicUseCase = getTopicUseCase,
             getFlashcardReviewsUseCase = getFlashcardReviews,
             updateCardScheduleUseCase = updateCardSchedule,
+            ttsEngine = ttsEngine,
         )
 
         assertEquals("", vm.stateFlow.value.content.topicName)
@@ -232,5 +237,63 @@ class ReviewViewModelTest {
         createViewModel()
 
         coVerify { getFlashcardReviews("topic1") }
+    }
+
+    @Test
+    fun `init speaks question of first due card`() = runTest {
+        createViewModel()
+
+        verify { ttsEngine.speak(flashcards[0].question) }
+    }
+
+    @Test
+    fun `FlipCard speaks answer when flipping to back`() = runTest {
+        val vm = createViewModel()
+
+        vm.onSendEvent(FlipCard)
+
+        verify { ttsEngine.speak(flashcards[0].answer) }
+    }
+
+    @Test
+    fun `FlipCard speaks question when flipping back to front`() = runTest {
+        val vm = createViewModel()
+        vm.onSendEvent(FlipCard)
+
+        vm.onSendEvent(FlipCard)
+
+        verify(atLeast = 2) { ttsEngine.speak(flashcards[0].question) }
+    }
+
+    @Test
+    fun `RateCard AGAIN speaks question of same card`() = runTest {
+        val vm = createViewModel()
+        vm.onSendEvent(FlipCard)
+
+        vm.onSendEvent(RateCard(CardRating.AGAIN))
+
+        verify(atLeast = 2) { ttsEngine.speak(flashcards[0].question) }
+    }
+
+    @Test
+    fun `RateCard GOOD speaks question of next card`() = runTest {
+        val vm = createViewModel()
+        vm.onSendEvent(FlipCard)
+
+        vm.onSendEvent(RateCard(CardRating.GOOD))
+
+        verify { ttsEngine.speak(flashcards[1].question) }
+    }
+
+    @Test
+    fun `RateCard GOOD on last card stops TTS`() = runTest {
+        val vm = createViewModel()
+
+        repeat(flashcards.size) {
+            vm.onSendEvent(FlipCard)
+            vm.onSendEvent(RateCard(CardRating.GOOD))
+        }
+
+        verify { ttsEngine.stop() }
     }
 }

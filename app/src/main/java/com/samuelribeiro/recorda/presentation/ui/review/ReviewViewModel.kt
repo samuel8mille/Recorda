@@ -10,6 +10,7 @@ import com.samuelribeiro.recorda.core.mvi.UiState
 import com.samuelribeiro.recorda.core.mvi.UiStateImpl
 import com.samuelribeiro.recorda.domain.model.CardRating
 import com.samuelribeiro.recorda.domain.model.FlashcardReviewState
+import com.samuelribeiro.recorda.domain.tts.TextToSpeechEngine
 import com.samuelribeiro.recorda.domain.usecase.GetFlashcardReviewsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetTopicUseCase
 import com.samuelribeiro.recorda.domain.usecase.UpdateCardScheduleUseCase
@@ -26,6 +27,7 @@ import kotlinx.coroutines.launch
  * @param getTopicUseCase Observes the topic and its flashcards from the local DB.
  * @param getFlashcardReviewsUseCase Loads saved SM-2 states for this topic's cards.
  * @param updateCardScheduleUseCase Schedules a rated card via SM-2 and persists the result.
+ * @param ttsEngine Speaks card content aloud; swappable via the domain interface.
  */
 @HiltViewModel(assistedFactory = ReviewViewModel.ViewModelFactory::class)
 class ReviewViewModel @AssistedInject constructor(
@@ -33,6 +35,7 @@ class ReviewViewModel @AssistedInject constructor(
     private val getTopicUseCase: GetTopicUseCase,
     private val getFlashcardReviewsUseCase: GetFlashcardReviewsUseCase,
     private val updateCardScheduleUseCase: UpdateCardScheduleUseCase,
+    private val ttsEngine: TextToSpeechEngine,
 ) : ViewModel(),
     UiState<ReviewUiState> by UiStateImpl(ReviewUiState()),
     UiEvent<ReviewUiEvent> by UiEventImpl(),
@@ -56,6 +59,7 @@ class ReviewViewModel @AssistedInject constructor(
             getTopicUseCase(topicId).collect { topic ->
                 topic ?: return@collect
                 val due = topic.flashcards.filterIndexed { index, _ -> isDue(index) }
+                val alreadyLoaded = stateFlow.value.content.flashcards.isNotEmpty()
                 setState {
                     copy(
                         content = content.copy(
@@ -65,6 +69,7 @@ class ReviewViewModel @AssistedInject constructor(
                         )
                     )
                 }
+                if (!alreadyLoaded && due.isNotEmpty()) ttsEngine.speak(due[0].question)
             }
         }
     }
@@ -86,7 +91,11 @@ class ReviewViewModel @AssistedInject constructor(
     }
 
     private fun onFlipCard() {
-        setState { copy(content = content.copy(isFlipped = !content.isFlipped)) }
+        val current = stateFlow.value.content
+        val flippingToAnswer = !current.isFlipped
+        setState { copy(content = current.copy(isFlipped = flippingToAnswer)) }
+        val card = current.flashcards.getOrNull(current.currentIndex) ?: return
+        ttsEngine.speak(if (flippingToAnswer) card.answer else card.question)
     }
 
     private suspend fun onRateCard(rating: CardRating) {
@@ -96,12 +105,17 @@ class ReviewViewModel @AssistedInject constructor(
         val updated = updateCardScheduleUseCase(topicId, currentState, rating)
         reviewStates[currentIndex] = updated
         when (rating) {
-            CardRating.AGAIN -> setState { copy(content = current.copy(isFlipped = false)) }
+            CardRating.AGAIN -> {
+                setState { copy(content = current.copy(isFlipped = false)) }
+                ttsEngine.speak(current.flashcards[currentIndex].question)
+            }
             CardRating.GOOD, CardRating.EASY -> {
                 val nextIndex = currentIndex + 1
                 if (nextIndex >= current.flashcards.size) {
+                    ttsEngine.stop()
                     setState { copy(content = current.copy(isSessionComplete = true)) }
                 } else {
+                    ttsEngine.speak(current.flashcards[nextIndex].question)
                     setState {
                         copy(content = current.copy(currentIndex = nextIndex, isFlipped = false))
                     }
@@ -113,5 +127,10 @@ class ReviewViewModel @AssistedInject constructor(
     /** Dispatches a [ReviewUiEvent] to be processed by this ViewModel. */
     fun onSendEvent(event: ReviewUiEvent) {
         viewModelScope.launch { sendEvent(event) }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        ttsEngine.stop()
     }
 }
