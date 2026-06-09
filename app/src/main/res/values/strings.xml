@@ -17,6 +17,11 @@
     <string name="topic_list_item_question_label">Pergunta:</string>
     <string name="topic_list_item_answer_label">Resposta:</string>
     <string name="topic_review_button">Revisar</string>
+    <string name="topic_delete_button_description">Excluir tópico</string>
+    <string name="topic_delete_dialog_title">Excluir tópico?</string>
+    <string name="topic_delete_dialog_message">Todos os flashcards e o histórico de revisão de %1$s serão removidos permanentemente.</string>
+    <string name="topic_delete_dialog_confirm">Excluir</string>
+    <string name="topic_delete_dialog_cancel">Cancelar</string>
 
     <string name="error_no_internet">Sem conexão com a internet. Seu tema foi salvo e será gerado assim que você ficar online.</string>
     <string name="error_timeout">A requisição demorou demais. Tente novamente.</string>

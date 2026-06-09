@@ -15,15 +15,19 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,17 +58,43 @@ const val INPUT_ERROR_TEST_TAG = "InputErrorTestTag"
 const val TOPIC_ITEM_TEST_TAG = "TopicItemTestTag"
 const val TOPIC_INPUT_TEST_TAG = "TopicInput"
 const val REVIEW_BUTTON_TEST_TAG = "ReviewButtonTestTag"
+const val DELETE_BUTTON_TEST_TAG = "DeleteButtonTestTag"
 
 @Composable
 fun TopicContent(
     uiState: TopicUiState,
     onGenerateFlashcardsClick: (String) -> Unit,
     onReviewClick: (String) -> Unit,
+    onDeleteClick: (String) -> Unit,
+    onConfirmDelete: () -> Unit,
+    onDismissDelete: () -> Unit,
 ) {
     val (topic, setTopic) = remember { mutableStateOf("") }
+
+    if (uiState.pendingDeleteTopicId != null) {
+        val topicName = uiState.topics.find { it.id == uiState.pendingDeleteTopicId }?.name ?: ""
+        AlertDialog(
+            onDismissRequest = onDismissDelete,
+            title = { Text(stringResource(R.string.topic_delete_dialog_title)) },
+            text = { Text(stringResource(R.string.topic_delete_dialog_message, topicName)) },
+            confirmButton = {
+                TextButton(onClick = onConfirmDelete) {
+                    Text(
+                        text = stringResource(R.string.topic_delete_dialog_confirm),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissDelete) {
+                    Text(stringResource(R.string.topic_delete_dialog_cancel))
+                }
+            },
+        )
+    }
+
     Column(
-        modifier = Modifier
-            .fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(Modifier.height(SpaceLarge))
@@ -92,7 +122,11 @@ fun TopicContent(
                 modifier = Modifier.padding(horizontal = HorizontalPadding)
             ) {
                 items(items = uiState.topics, itemContent = { item ->
-                    TopicContentListItem(item = item, onReviewClick = onReviewClick)
+                    TopicContentListItem(
+                        item = item,
+                        onReviewClick = onReviewClick,
+                        onDeleteClick = onDeleteClick,
+                    )
                 })
             }
         }
@@ -180,6 +214,7 @@ fun TopicContentHeader(
 fun TopicContentListItem(
     item: Topic,
     onReviewClick: (String) -> Unit,
+    onDeleteClick: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -198,13 +233,27 @@ fun TopicContentListItem(
             }
         }
         Spacer(Modifier.height(SpaceSmall))
-        OutlinedButton(
-            modifier = Modifier
-                .testTag(REVIEW_BUTTON_TEST_TAG)
-                .align(Alignment.End),
-            onClick = { onReviewClick(item.id) },
+        Row(
+            modifier = Modifier.align(Alignment.End),
+            horizontalArrangement = Arrangement.spacedBy(SpaceSmall),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(stringResource(R.string.topic_review_button))
+            IconButton(
+                modifier = Modifier.testTag(DELETE_BUTTON_TEST_TAG),
+                onClick = { onDeleteClick(item.id) },
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.topic_delete_button_description),
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            }
+            OutlinedButton(
+                modifier = Modifier.testTag(REVIEW_BUTTON_TEST_TAG),
+                onClick = { onReviewClick(item.id) },
+            ) {
+                Text(stringResource(R.string.topic_review_button))
+            }
         }
         Spacer(Modifier.height(SpaceMedium))
     }

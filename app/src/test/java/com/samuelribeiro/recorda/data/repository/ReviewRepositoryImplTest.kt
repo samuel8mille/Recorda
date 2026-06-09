@@ -86,4 +86,13 @@ class ReviewRepositoryImplTest {
 
         coVerify(exactly = 1) { dao.upsert(any()) }
     }
+
+    @Test
+    fun `deleteReviewStates delegates to dao deleteByTopicId`() = runTest {
+        coEvery { dao.deleteByTopicId(any()) } returns Unit
+
+        repository.deleteReviewStates("topic1")
+
+        coVerify(exactly = 1) { dao.deleteByTopicId("topic1") }
+    }
 }

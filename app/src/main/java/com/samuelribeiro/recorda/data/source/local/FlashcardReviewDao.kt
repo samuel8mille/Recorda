@@ -16,4 +16,8 @@ interface FlashcardReviewDao {
     /** Inserts or replaces a [FlashcardReviewEntity]. */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: FlashcardReviewEntity)
+
+    /** Deletes all review states whose [FlashcardReviewEntity.topicId] matches [topicId]. */
+    @Query("DELETE FROM flashcard_reviews WHERE topicId = :topicId")
+    suspend fun deleteByTopicId(topicId: String)
 }

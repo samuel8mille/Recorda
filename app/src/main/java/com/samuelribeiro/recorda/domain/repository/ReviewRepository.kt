@@ -10,4 +10,7 @@ interface ReviewRepository {
 
     /** Upserts the scheduling state for a single card identified by [topicId] + [state.cardIndex]. */
     suspend fun saveReviewState(topicId: String, state: FlashcardReviewState)
+
+    /** Deletes all review states associated with [topicId]. */
+    suspend fun deleteReviewStates(topicId: String)
 }

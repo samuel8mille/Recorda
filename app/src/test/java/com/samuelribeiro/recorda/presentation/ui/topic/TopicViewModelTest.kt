@@ -7,10 +7,12 @@ import com.samuelribeiro.recorda.core.network.NetworkError
 import com.samuelribeiro.recorda.domain.model.Flashcard
 import com.samuelribeiro.recorda.domain.model.Topic
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
+import com.samuelribeiro.recorda.domain.usecase.DeleteTopicUseCase
 import com.samuelribeiro.recorda.domain.usecase.GenerateFlashcardsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetStoredTopicsUseCase
 import com.samuelribeiro.recorda.logging.CrashReporter
 import com.samuelribeiro.recorda.util.MainDispatcherRule
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -35,6 +37,7 @@ class TopicViewModelTest {
     private val repository: TopicRepository = mockk()
     private val analyticsTracker: AnalyticsTracker = mockk(relaxed = true)
     private val crashReporter: CrashReporter = mockk(relaxed = true)
+    private val deleteTopicUseCase: DeleteTopicUseCase = mockk()
 
     private val generateFlashcardsUseCase = GenerateFlashcardsUseCase(repository)
     private val getStoredTopicsUseCase = GetStoredTopicsUseCase(repository)
@@ -44,6 +47,7 @@ class TopicViewModelTest {
     @Before
     fun setUp() {
         every { repository.getStoredTopics() } returns flowOf(emptyList())
+        coEvery { deleteTopicUseCase(any()) } returns Unit
     }
 
     private fun createViewModel(existingTopics: List<Topic> = emptyList()): TopicViewModel {
@@ -52,6 +56,7 @@ class TopicViewModelTest {
             initialState = TopicUiState(),
             generateFlashcardsUseCase = generateFlashcardsUseCase,
             getStoredTopicsUseCase = getStoredTopicsUseCase,
+            deleteTopicUseCase = deleteTopicUseCase,
             analyticsTracker = analyticsTracker,
             crashlyticsReporter = crashReporter,
         )
@@ -238,5 +243,44 @@ class TopicViewModelTest {
 
         vm.onSendEvent(OnGenerateFlashcardsClick("Kotlin"))
         assertNull(vm.stateFlow.value.content.inputError)
+    }
+
+    @Test
+    fun `RequestDeleteTopic sets pendingDeleteTopicId`() = runTest {
+        val vm = createViewModel(existingTopics = listOf(topic))
+
+        vm.onSendEvent(RequestDeleteTopic("1"))
+
+        assertEquals("1", vm.stateFlow.value.content.pendingDeleteTopicId)
+    }
+
+    @Test
+    fun `DismissDeleteDialog clears pendingDeleteTopicId`() = runTest {
+        val vm = createViewModel(existingTopics = listOf(topic))
+        vm.onSendEvent(RequestDeleteTopic("1"))
+
+        vm.onSendEvent(DismissDeleteDialog)
+
+        assertNull(vm.stateFlow.value.content.pendingDeleteTopicId)
+    }
+
+    @Test
+    fun `ConfirmDeleteTopic calls DeleteTopicUseCase and clears pendingDeleteTopicId`() = runTest {
+        val vm = createViewModel(existingTopics = listOf(topic))
+        vm.onSendEvent(RequestDeleteTopic("1"))
+
+        vm.onSendEvent(ConfirmDeleteTopic)
+
+        coVerify { deleteTopicUseCase("1") }
+        assertNull(vm.stateFlow.value.content.pendingDeleteTopicId)
+    }
+
+    @Test
+    fun `ConfirmDeleteTopic when no pending id is a no-op`() = runTest {
+        val vm = createViewModel()
+
+        vm.onSendEvent(ConfirmDeleteTopic)
+
+        coVerify(exactly = 0) { deleteTopicUseCase(any()) }
     }
 }

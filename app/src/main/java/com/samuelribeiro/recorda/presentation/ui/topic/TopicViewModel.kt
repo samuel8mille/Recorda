@@ -15,6 +15,7 @@ import com.samuelribeiro.recorda.core.mvi.UiState
 import com.samuelribeiro.recorda.core.mvi.UiStateImpl
 import com.samuelribeiro.recorda.core.network.NetworkError
 import com.samuelribeiro.recorda.domain.model.Topic
+import com.samuelribeiro.recorda.domain.usecase.DeleteTopicUseCase
 import com.samuelribeiro.recorda.domain.usecase.GenerateFlashcardsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetStoredTopicsUseCase
 import com.samuelribeiro.recorda.logging.CrashReporter
@@ -34,6 +35,7 @@ import timber.log.Timber
  * @param initialState The initial UI state for the topic screen.
  * @param generateFlashcardsUseCase Use case that generates flashcards for a topic via the network.
  * @param getStoredTopicsUseCase Use case that observes the locally stored topic list.
+ * @param deleteTopicUseCase Use case that permanently removes a topic and its review states.
  * @param analyticsTracker Tracks user interaction events.
  * @param crashlyticsReporter Reports breadcrumbs and custom keys for crash diagnostics.
  */
@@ -42,6 +44,7 @@ class TopicViewModel @AssistedInject constructor(
     @Assisted initialState: TopicUiState,
     private val generateFlashcardsUseCase: GenerateFlashcardsUseCase,
     private val getStoredTopicsUseCase: GetStoredTopicsUseCase,
+    private val deleteTopicUseCase: DeleteTopicUseCase,
     private val analyticsTracker: AnalyticsTracker,
     private val crashlyticsReporter: CrashReporter,
 ) : ViewModel(),
@@ -73,8 +76,23 @@ class TopicViewModel @AssistedInject constructor(
             eventFlow.collect {
                 when (it) {
                     is OnGenerateFlashcardsClick -> onGenerateFlashcardsClick(it.topic)
+                    is RequestDeleteTopic -> setState {
+                        copy(content = content.copy(pendingDeleteTopicId = it.topicId))
+                    }
+                    ConfirmDeleteTopic -> onConfirmDeleteTopic()
+                    DismissDeleteDialog -> setState {
+                        copy(content = content.copy(pendingDeleteTopicId = null))
+                    }
                 }
             }
+        }
+    }
+
+    private fun onConfirmDeleteTopic() {
+        val topicId = stateFlow.value.content.pendingDeleteTopicId ?: return
+        viewModelScope.launch {
+            deleteTopicUseCase(topicId)
+            setState { copy(content = content.copy(pendingDeleteTopicId = null)) }
         }
     }
 

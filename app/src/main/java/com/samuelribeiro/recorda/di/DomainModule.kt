@@ -3,6 +3,7 @@ package com.samuelribeiro.recorda.di
 import com.samuelribeiro.recorda.domain.repository.ReviewRepository
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
 import com.samuelribeiro.recorda.domain.scheduler.ReviewScheduler
+import com.samuelribeiro.recorda.domain.usecase.DeleteTopicUseCase
 import com.samuelribeiro.recorda.domain.usecase.GenerateFlashcardsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetFlashcardReviewsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetStoredTopicsUseCase
@@ -17,6 +18,13 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 object DomainModule {
+
+    /** Provides [DeleteTopicUseCase]. */
+    @Provides
+    fun provideDeleteTopicUseCase(
+        topicRepository: TopicRepository,
+        reviewRepository: ReviewRepository,
+    ): DeleteTopicUseCase = DeleteTopicUseCase(topicRepository, reviewRepository)
 
     @Provides
     fun provideGenerateFlashcardsUseCase(

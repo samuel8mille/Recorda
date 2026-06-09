@@ -30,8 +30,11 @@ import com.samuelribeiro.recorda.R
 import com.samuelribeiro.recorda.core.mvi.ProcessUiState
 import com.samuelribeiro.recorda.core.ui.ProcessContainer
 import com.samuelribeiro.recorda.presentation.ui.mapper.asUserMessage
+import com.samuelribeiro.recorda.presentation.ui.topic.ConfirmDeleteTopic
+import com.samuelribeiro.recorda.presentation.ui.topic.DismissDeleteDialog
 import com.samuelribeiro.recorda.presentation.ui.topic.NavigateToReview
 import com.samuelribeiro.recorda.presentation.ui.topic.OnGenerateFlashcardsClick
+import com.samuelribeiro.recorda.presentation.ui.topic.RequestDeleteTopic
 import com.samuelribeiro.recorda.presentation.ui.topic.ShowError
 import com.samuelribeiro.recorda.presentation.ui.topic.TopicUiState
 import com.samuelribeiro.recorda.presentation.ui.topic.TopicViewModel
@@ -66,6 +69,9 @@ fun TopicScreen(
         snackbarHostState = snackbarHostState,
         onGenerateFlashcardsClick = { topic -> viewModel.onSendEvent(OnGenerateFlashcardsClick(topic)) },
         onReviewClick = onNavigateToReview,
+        onDeleteClick = { topicId -> viewModel.onSendEvent(RequestDeleteTopic(topicId)) },
+        onConfirmDelete = { viewModel.onSendEvent(ConfirmDeleteTopic) },
+        onDismissDelete = { viewModel.onSendEvent(DismissDeleteDialog) },
     )
 }
 
@@ -75,6 +81,9 @@ fun TopicScreen(
     snackbarHostState: SnackbarHostState,
     onGenerateFlashcardsClick: (String) -> Unit,
     onReviewClick: (String) -> Unit,
+    onDeleteClick: (String) -> Unit,
+    onConfirmDelete: () -> Unit,
+    onDismissDelete: () -> Unit,
 ) {
     ProcessContainer(uiState = uiState) {
         TopicScaffold(
@@ -82,6 +91,9 @@ fun TopicScreen(
             snackbarHostState = snackbarHostState,
             onGenerateFlashcardsClick = onGenerateFlashcardsClick,
             onReviewClick = onReviewClick,
+            onDeleteClick = onDeleteClick,
+            onConfirmDelete = onConfirmDelete,
+            onDismissDelete = onDismissDelete,
         )
     }
 }
@@ -93,6 +105,9 @@ fun TopicScaffold(
     snackbarHostState: SnackbarHostState,
     onGenerateFlashcardsClick: (String) -> Unit,
     onReviewClick: (String) -> Unit,
+    onDeleteClick: (String) -> Unit,
+    onConfirmDelete: () -> Unit,
+    onDismissDelete: () -> Unit,
 ) {
     Scaffold(
         modifier = Modifier
@@ -132,6 +147,9 @@ fun TopicScaffold(
                 uiState = uiState,
                 onGenerateFlashcardsClick = onGenerateFlashcardsClick,
                 onReviewClick = onReviewClick,
+                onDeleteClick = onDeleteClick,
+                onConfirmDelete = onConfirmDelete,
+                onDismissDelete = onDismissDelete,
             )
         }
     }

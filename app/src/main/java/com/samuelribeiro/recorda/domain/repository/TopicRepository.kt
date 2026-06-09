@@ -12,6 +12,9 @@ interface TopicRepository {
     /** Emits a single [Topic] by [id], or `null` if not found. Updates when the DB changes. */
     fun getTopic(id: String): Flow<Topic?>
 
+    /** Permanently removes the topic with [id] and all its flashcards from local storage. */
+    suspend fun deleteTopic(id: String)
+
     /**
      * Generates flashcards for [topicName] via the LLM and persists the result locally.
      *

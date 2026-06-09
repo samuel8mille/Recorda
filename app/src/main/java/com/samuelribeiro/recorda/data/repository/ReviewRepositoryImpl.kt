@@ -14,6 +14,10 @@ class ReviewRepositoryImpl @Inject constructor(
     override suspend fun getReviewStates(topicId: String): List<FlashcardReviewState> =
         dao.getReviewsForTopic(topicId).map { it.toDomain() }
 
+    override suspend fun deleteReviewStates(topicId: String) {
+        dao.deleteByTopicId(topicId)
+    }
+
     override suspend fun saveReviewState(topicId: String, state: FlashcardReviewState) {
         dao.upsert(
             FlashcardReviewEntity(

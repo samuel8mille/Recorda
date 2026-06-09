@@ -13,9 +13,12 @@ import com.samuelribeiro.recorda.domain.model.Topic
  * @property topics The list of [Topic]s (with their generated flashcards) to display.
  * @property inputError An optional [ErrorUiState] for the topic input field. If not null,
  *   an error message should be shown.
+ * @property pendingDeleteTopicId The ID of the topic awaiting deletion confirmation, or `null`
+ *   if no deletion is in progress.
  */
 data class TopicUiState(
     @param:StringRes override val titleRes: Int = R.string.app_name,
     val topics: List<Topic> = emptyList(),
     val inputError: ErrorUiState? = null,
+    val pendingDeleteTopicId: String? = null,
 ) : ScreenUiState

@@ -52,6 +52,10 @@ class TopicRepositoryImpl @Inject constructor(
     override fun getTopic(id: String): Flow<Topic?> =
         topicDao.getById(id).map { it?.let(topicEntityMapper::toDomain) }
 
+    override suspend fun deleteTopic(id: String) {
+        topicDao.deleteById(id)
+    }
+
     override fun generateFlashcards(topicName: String): Flow<Result<Topic>> =
         serviceExecutor.execute(isIdempotent = false) {
             geminiService.generateContent(promptBuilder.build(topicName))
