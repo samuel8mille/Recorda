@@ -31,11 +31,14 @@ jobs:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
 
-      - name: Get version from latest tag
+      - name: Get version from CHANGELOG.md
         id: version
         run: |
-          TAG=$(git tag --sort=-version:refname | head -1)
-          VERSION="${TAG#v}"
+          VERSION=$(grep -m1 -oP '^## \[\K[0-9]+\.[0-9]+\.[0-9]+(?=\])' CHANGELOG.md || true)
+          if [ -z "$VERSION" ]; then
+            TAG=$(git tag --sort=-version:refname | head -1)
+            VERSION="${TAG#v}"
+          fi
           VERSION="${VERSION:-1.0.0}"
           echo "name=$VERSION" >> "$GITHUB_OUTPUT"
 
