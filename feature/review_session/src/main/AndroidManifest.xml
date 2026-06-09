@@ -16,5 +16,16 @@
         <dist:fusing dist:include="true" />
     </dist:module>
 
-    <application />
+    <application>
+        <!--
+        Registers ReviewScreen into ReviewSessionEntry before Application.onCreate().
+        This lets :app navigate to ReviewScreen without importing it directly,
+        preserving the dynamic-feature dependency direction.
+        -->
+        <provider
+            android:name=".ReviewSessionInitProvider"
+            android:authorities="${applicationId}.review_session_init"
+            android:exported="false" />
+    </application>
+
 </manifest>

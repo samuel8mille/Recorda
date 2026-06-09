@@ -215,6 +215,20 @@ class TopicViewModelTest {
     }
 
     @Test
+    fun `successful generation emits NavigateToReview effect with topic id`() = runTest {
+        every { repository.generateFlashcards("Kotlin") } returns flowOf(Result.success(topic))
+        val vm = createViewModel()
+
+        vm.effectFlow.test {
+            vm.onSendEvent(OnGenerateFlashcardsClick("Kotlin"))
+            val effect = awaitItem()
+            assertIs<NavigateToReview>(effect)
+            kotlin.test.assertEquals(topic.id, effect.topicId)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `valid submission clears previous inputError`() = runTest {
         every { repository.generateFlashcards("Kotlin") } returns flowOf(Result.success(topic))
         val vm = createViewModel()

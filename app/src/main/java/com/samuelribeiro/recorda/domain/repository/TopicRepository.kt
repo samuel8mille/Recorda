@@ -9,6 +9,9 @@ interface TopicRepository {
     /** Emits the full list of stored [Topic] entries, updated whenever the database changes. */
     fun getStoredTopics(): Flow<List<Topic>>
 
+    /** Emits a single [Topic] by [id], or `null` if not found. Updates when the DB changes. */
+    fun getTopic(id: String): Flow<Topic?>
+
     /**
      * Generates flashcards for [topicName] via the LLM and persists the result locally.
      *

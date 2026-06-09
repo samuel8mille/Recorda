@@ -30,6 +30,7 @@ import com.samuelribeiro.recorda.R
 import com.samuelribeiro.recorda.core.mvi.ProcessUiState
 import com.samuelribeiro.recorda.core.ui.ProcessContainer
 import com.samuelribeiro.recorda.presentation.ui.mapper.asUserMessage
+import com.samuelribeiro.recorda.presentation.ui.topic.NavigateToReview
 import com.samuelribeiro.recorda.presentation.ui.topic.OnGenerateFlashcardsClick
 import com.samuelribeiro.recorda.presentation.ui.topic.ShowError
 import com.samuelribeiro.recorda.presentation.ui.topic.TopicUiState
@@ -38,6 +39,7 @@ import com.samuelribeiro.recorda.presentation.ui.topic.TopicViewModel
 @Composable
 fun TopicScreen(
     viewModel: TopicViewModel,
+    onNavigateToReview: (String) -> Unit,
 ) {
     val uiState by viewModel.stateFlow.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -54,6 +56,7 @@ fun TopicScreen(
                     message = effect.error.asUserMessage(context),
                     duration = SnackbarDuration.Long,
                 )
+                is NavigateToReview -> onNavigateToReview(effect.topicId)
             }
         }
     }

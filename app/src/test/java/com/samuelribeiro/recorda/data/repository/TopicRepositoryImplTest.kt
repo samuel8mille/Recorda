@@ -130,6 +130,28 @@ class TopicRepositoryImplTest {
     }
 
     @Test
+    fun `getTopic maps entity to domain topic`() = runTest {
+        val flashcardsJson = Gson().toJson(listOf(Flashcard("Q?", "A")))
+        val entity = TopicEntity("1", "Kotlin", flashcardsJson, TopicStatus.DONE)
+        every { topicDao.getById("1") } returns flowOf(entity)
+
+        val topic = repository.getTopic("1").first()
+
+        assertEquals("1", topic?.id)
+        assertEquals("Kotlin", topic?.name)
+        assertEquals("Q?", topic?.flashcards?.first()?.question)
+    }
+
+    @Test
+    fun `getTopic returns null when entity not found`() = runTest {
+        every { topicDao.getById("missing") } returns flowOf(null)
+
+        val topic = repository.getTopic("missing").first()
+
+        kotlin.test.assertNull(topic)
+    }
+
+    @Test
     fun `generateFlashcards includes topic name in DB insert on success`() = runTest {
         coEvery { geminiService.generateContent(any()) } returns "P: Q? | R: A"
 

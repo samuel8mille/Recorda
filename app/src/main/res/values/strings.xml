@@ -22,4 +22,14 @@
     <string name="error_empty_response">A IA não retornou nenhum conteúdo. Tente novamente.</string>
     <string name="error_http_generic">Erro do servidor (código %1$d). Tente novamente mais tarde.</string>
     <string name="error_unknown">Algo deu errado. Tente novamente.</string>
+
+    <string name="review_screen_title">Revisão</string>
+    <string name="review_tap_to_reveal">Toque para revelar</string>
+    <string name="review_rating_again">De novo</string>
+    <string name="review_rating_good">Bom</string>
+    <string name="review_rating_easy">Fácil</string>
+    <string name="review_progress">Cartão %1$d de %2$d</string>
+    <string name="review_complete_title">Sessão concluída!</string>
+    <string name="review_complete_subtitle">Você revisou todos os flashcards de %1$s</string>
+    <string name="review_complete_button">Voltar</string>
 </resources>

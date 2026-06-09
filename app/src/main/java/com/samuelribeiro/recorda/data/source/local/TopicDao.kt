@@ -17,6 +17,10 @@ interface TopicDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: TopicEntity)
 
+    /** Emits the [TopicEntity] with the given [id], or `null` if not found. */
+    @Query("SELECT * FROM topics WHERE id = :id")
+    fun getById(id: String): Flow<TopicEntity?>
+
     @Query("UPDATE topics SET status = 'DONE', flashcardsJson = :flashcardsJson WHERE id = :id")
     suspend fun markDone(id: String, flashcardsJson: String)
 }

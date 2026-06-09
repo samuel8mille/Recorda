@@ -136,9 +136,10 @@ class TopicViewModel @AssistedInject constructor(
         }
     }
 
-    private fun handleSuccessResult(topic: Topic) {
+    private suspend fun handleSuccessResult(topic: Topic) {
         analyticsTracker.track(AnalyticsEvent.FlashcardsGenerated(topic.flashcards.size))
         crashlyticsReporter.logTopicSubmitSuccess(topic.name)
+        sendEffect(NavigateToReview(topic.id))
     }
 
     private suspend fun handleFailureResult(result: Throwable) {

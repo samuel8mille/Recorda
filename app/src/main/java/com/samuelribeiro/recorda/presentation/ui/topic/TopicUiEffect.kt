@@ -9,3 +9,6 @@ sealed class TopicUiEffect
  * @property error The underlying [Throwable].
  */
 data class ShowError(val error: Throwable) : TopicUiEffect()
+
+/** Triggers navigation to the review session for the given [topicId]. */
+data class NavigateToReview(val topicId: String) : TopicUiEffect()

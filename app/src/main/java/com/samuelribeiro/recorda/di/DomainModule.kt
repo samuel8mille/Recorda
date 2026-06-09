@@ -3,6 +3,7 @@ package com.samuelribeiro.recorda.di
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
 import com.samuelribeiro.recorda.domain.usecase.GenerateFlashcardsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetStoredTopicsUseCase
+import com.samuelribeiro.recorda.domain.usecase.GetTopicUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,4 +23,9 @@ object DomainModule {
     fun provideGetStoredTopicsUseCase(
         repository: TopicRepository
     ): GetStoredTopicsUseCase = GetStoredTopicsUseCase(repository)
+
+    /** Provides [GetTopicUseCase]. */
+    @Provides
+    fun provideGetTopicUseCase(repository: TopicRepository): GetTopicUseCase =
+        GetTopicUseCase(repository)
 }
