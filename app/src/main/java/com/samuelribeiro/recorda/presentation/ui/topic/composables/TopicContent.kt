@@ -2,6 +2,7 @@ package com.samuelribeiro.recorda.presentation.ui.topic.composables
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +20,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Icon
@@ -44,10 +45,8 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import com.samuelribeiro.recorda.R
-import com.samuelribeiro.recorda.domain.model.Flashcard
 import com.samuelribeiro.recorda.domain.model.Topic
 import com.samuelribeiro.recorda.ui.theme.HorizontalPadding
-import com.samuelribeiro.recorda.ui.theme.ListItemVerticalPadding
 import com.samuelribeiro.recorda.ui.theme.SpaceLarge
 import com.samuelribeiro.recorda.ui.theme.SpaceMedium
 import com.samuelribeiro.recorda.ui.theme.SpaceSmall
@@ -113,21 +112,23 @@ fun TopicContent(
                     .fillMaxWidth()
                     .weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
             ) {
                 EmptyTopicListMessage()
             }
         } else {
             LazyColumn(
-                modifier = Modifier.padding(horizontal = HorizontalPadding)
+                modifier = Modifier.padding(horizontal = HorizontalPadding),
+                verticalArrangement = Arrangement.spacedBy(SpaceSmall),
+                contentPadding = PaddingValues(vertical = SpaceMedium),
             ) {
-                items(items = uiState.topics, itemContent = { item ->
+                items(items = uiState.topics) { item ->
                     TopicContentListItem(
                         item = item,
                         onReviewClick = onReviewClick,
                         onDeleteClick = onDeleteClick,
                     )
-                })
+                }
             }
         }
     }
@@ -216,28 +217,24 @@ fun TopicContentListItem(
     onReviewClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
 ) {
-    Column(
+    ElevatedCard(
         modifier = Modifier
             .testTag(TOPIC_ITEM_TEST_TAG)
-            .padding(vertical = ListItemVerticalPadding)
+            .fillMaxWidth(),
     ) {
-        Column(modifier = Modifier.semantics(mergeDescendants = true) {}) {
-            Spacer(Modifier.height(SpaceMedium))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = HorizontalPadding, end = SpaceSmall, top = SpaceMedium, bottom = SpaceMedium),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics(mergeDescendants = true) {},
                 text = item.name,
                 style = MaterialTheme.typography.titleMedium,
             )
-            item.flashcards.forEach { flashcard ->
-                Spacer(Modifier.height(SpaceMedium))
-                FlashcardRow(flashcard = flashcard)
-            }
-        }
-        Spacer(Modifier.height(SpaceSmall))
-        Row(
-            modifier = Modifier.align(Alignment.End),
-            horizontalArrangement = Arrangement.spacedBy(SpaceSmall),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
             IconButton(
                 modifier = Modifier.testTag(DELETE_BUTTON_TEST_TAG),
                 onClick = { onDeleteClick(item.id) },
@@ -254,41 +251,6 @@ fun TopicContentListItem(
             ) {
                 Text(stringResource(R.string.topic_review_button))
             }
-        }
-        Spacer(Modifier.height(SpaceMedium))
-    }
-    HorizontalDivider()
-}
-
-@Composable
-fun FlashcardRow(
-    flashcard: Flashcard,
-) {
-    Column {
-        Row {
-            Text(
-                text = stringResource(R.string.topic_list_item_question_label),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            Spacer(Modifier.width(SpaceSmall))
-            Text(
-                text = flashcard.question,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            )
-        }
-        Spacer(Modifier.height(SpaceSmall))
-        Row {
-            Text(
-                text = stringResource(R.string.topic_list_item_answer_label),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            Spacer(Modifier.width(SpaceSmall))
-            Text(
-                text = flashcard.answer,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            )
         }
     }
 }

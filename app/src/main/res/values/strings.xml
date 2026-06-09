@@ -14,8 +14,6 @@
     <string name="topic_button_generate_description">Gerar flashcards</string>
     <string name="topic_list_title">Seus temas</string>
     <string name="topic_list_empty_message">Nenhum flashcard ainda. Digite um tema acima para começar.</string>
-    <string name="topic_list_item_question_label">Pergunta:</string>
-    <string name="topic_list_item_answer_label">Resposta:</string>
     <string name="topic_review_button">Revisar</string>
     <string name="topic_delete_button_description">Excluir tópico</string>
     <string name="topic_delete_dialog_title">Excluir tópico?</string>
