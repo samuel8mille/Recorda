@@ -170,6 +170,7 @@ jobs:
               open(summary, "a").write(content + "\n")
           EOF
       - name: Report coverage on PR
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
         uses: madrapps/jacoco-report@v1.7.1
         with:
           paths: app/build/reports/coverage/test/debug/report.xml
