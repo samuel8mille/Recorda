@@ -48,17 +48,22 @@ class ReviewViewModel @AssistedInject constructor(
     private val reviewStates = mutableMapOf<Int, FlashcardReviewState>()
 
     init {
-        observeTopic()
         handleEvents()
-        loadReviewStates()
-    }
-
-    private fun observeTopic() {
         viewModelScope.launch {
+            getFlashcardReviewsUseCase(topicId).forEach { state ->
+                reviewStates[state.cardIndex] = state
+            }
             getTopicUseCase(topicId).collect { topic ->
                 topic ?: return@collect
+                val due = topic.flashcards.filterIndexed { index, _ -> isDue(index) }
                 setState {
-                    copy(content = content.copy(topicName = topic.name, flashcards = topic.flashcards))
+                    copy(
+                        content = content.copy(
+                            topicName = topic.name,
+                            flashcards = due,
+                            isNothingDue = due.isEmpty() && topic.flashcards.isNotEmpty(),
+                        )
+                    )
                 }
             }
         }
@@ -75,12 +80,9 @@ class ReviewViewModel @AssistedInject constructor(
         }
     }
 
-    private fun loadReviewStates() {
-        viewModelScope.launch {
-            getFlashcardReviewsUseCase(topicId).forEach { state ->
-                reviewStates[state.cardIndex] = state
-            }
-        }
+    private fun isDue(cardIndex: Int): Boolean {
+        val state = reviewStates[cardIndex]
+        return state == null || state.nextReviewAtMillis <= System.currentTimeMillis()
     }
 
     private fun onFlipCard() {

@@ -33,4 +33,8 @@
     <string name="review_complete_title">Sessão concluída!</string>
     <string name="review_complete_subtitle">Você revisou todos os flashcards de %1$s</string>
     <string name="review_complete_button">Voltar</string>
+
+    <string name="review_nothing_due_title">Tudo em dia!</string>
+    <string name="review_nothing_due_subtitle">Todos os cards de %1$s estão em dia. Volte amanhã para continuar revisando.</string>
+    <string name="review_nothing_due_button">Voltar</string>
 </resources>

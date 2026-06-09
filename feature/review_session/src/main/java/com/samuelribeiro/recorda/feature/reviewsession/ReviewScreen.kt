@@ -67,6 +67,10 @@ internal fun ReviewContent(
     onRateCard: (CardRating) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
+    if (uiState.isNothingDue) {
+        NothingDueContent(topicName = uiState.topicName, onNavigateBack = onNavigateBack)
+        return
+    }
     if (uiState.isSessionComplete) {
         SessionCompleteContent(topicName = uiState.topicName, onNavigateBack = onNavigateBack)
         return
@@ -193,6 +197,37 @@ private fun RatingButtons(onRateCard: (CardRating) -> Unit) {
         }
         FilledTonalButton(onClick = { onRateCard(CardRating.EASY) }) {
             Text(text = stringResource(R.string.review_rating_easy))
+        }
+    }
+}
+
+@Composable
+private fun NothingDueContent(topicName: String, onNavigateBack: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(HorizontalPadding),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(SpaceMedium),
+        ) {
+            Text(
+                text = stringResource(R.string.review_nothing_due_title),
+                style = MaterialTheme.typography.headlineMedium,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = stringResource(R.string.review_nothing_due_subtitle, topicName),
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            )
+            Spacer(Modifier.height(SpaceLarge))
+            Button(onClick = onNavigateBack) {
+                Text(text = stringResource(R.string.review_nothing_due_button))
+            }
         }
     }
 }

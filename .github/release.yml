@@ -1,0 +1,17 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+  categories:
+    - title: Breaking Changes
+      labels: [breaking-change]
+    - title: New Features
+      labels: [enhancement, feature]
+    - title: Bug Fixes
+      labels: [bug, fix]
+    - title: Dependencies
+      labels: [dependencies]
+    - title: CI/CD
+      labels: [ci, cd, devops]
+    - title: Other Changes
+      labels: ['*']

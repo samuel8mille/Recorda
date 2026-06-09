@@ -60,7 +60,7 @@ class ReviewViewModelTest {
         )
 
     @Test
-    fun `init loads topic name and flashcards`() = runTest {
+    fun `init loads topic name and all flashcards when none have been reviewed`() = runTest {
         val vm = createViewModel()
 
         assertEquals("Kotlin", vm.stateFlow.value.content.topicName)
@@ -74,6 +74,68 @@ class ReviewViewModelTest {
         assertEquals(0, vm.stateFlow.value.content.currentIndex)
         assertFalse(vm.stateFlow.value.content.isFlipped)
         assertFalse(vm.stateFlow.value.content.isSessionComplete)
+        assertFalse(vm.stateFlow.value.content.isNothingDue)
+    }
+
+    @Test
+    fun `topic not found leaves state with default empty values`() = runTest {
+        every { topicRepository.getTopic("missing") } returns flowOf(null)
+        val vm = ReviewViewModel(
+            topicId = "missing",
+            getTopicUseCase = getTopicUseCase,
+            getFlashcardReviewsUseCase = getFlashcardReviews,
+            updateCardScheduleUseCase = updateCardSchedule,
+        )
+
+        assertEquals("", vm.stateFlow.value.content.topicName)
+        assertTrue(vm.stateFlow.value.content.flashcards.isEmpty())
+    }
+
+    @Test
+    fun `cards with no review state are always due`() = runTest {
+        coEvery { getFlashcardReviews("topic1") } returns emptyList()
+        val vm = createViewModel()
+
+        assertEquals(flashcards.size, vm.stateFlow.value.content.flashcards.size)
+        assertFalse(vm.stateFlow.value.content.isNothingDue)
+    }
+
+    @Test
+    fun `cards with past nextReviewAtMillis are due`() = runTest {
+        val pastTime = System.currentTimeMillis() - 1
+        coEvery { getFlashcardReviews("topic1") } returns flashcards.mapIndexed { i, _ ->
+            FlashcardReviewState(cardIndex = i, nextReviewAtMillis = pastTime)
+        }
+        val vm = createViewModel()
+
+        assertEquals(flashcards.size, vm.stateFlow.value.content.flashcards.size)
+        assertFalse(vm.stateFlow.value.content.isNothingDue)
+    }
+
+    @Test
+    fun `isNothingDue is true when all cards have future nextReviewAtMillis`() = runTest {
+        val futureTime = System.currentTimeMillis() + 7 * 86_400_000L
+        coEvery { getFlashcardReviews("topic1") } returns flashcards.mapIndexed { i, _ ->
+            FlashcardReviewState(cardIndex = i, nextReviewAtMillis = futureTime)
+        }
+        val vm = createViewModel()
+
+        assertTrue(vm.stateFlow.value.content.isNothingDue)
+        assertTrue(vm.stateFlow.value.content.flashcards.isEmpty())
+    }
+
+    @Test
+    fun `only due cards are included when some are scheduled for the future`() = runTest {
+        val futureTime = System.currentTimeMillis() + 7 * 86_400_000L
+        coEvery { getFlashcardReviews("topic1") } returns listOf(
+            FlashcardReviewState(cardIndex = 0, nextReviewAtMillis = futureTime),
+            FlashcardReviewState(cardIndex = 1, nextReviewAtMillis = futureTime),
+        )
+        val vm = createViewModel()
+
+        assertEquals(1, vm.stateFlow.value.content.flashcards.size)
+        assertEquals(flashcards[2], vm.stateFlow.value.content.flashcards[0])
+        assertFalse(vm.stateFlow.value.content.isNothingDue)
     }
 
     @Test
@@ -150,20 +212,6 @@ class ReviewViewModelTest {
         }
 
         assertTrue(vm.stateFlow.value.content.isSessionComplete)
-    }
-
-    @Test
-    fun `topic not found leaves state with default empty values`() = runTest {
-        every { topicRepository.getTopic("missing") } returns flowOf(null)
-        val vm = ReviewViewModel(
-            topicId = "missing",
-            getTopicUseCase = getTopicUseCase,
-            getFlashcardReviewsUseCase = getFlashcardReviews,
-            updateCardScheduleUseCase = updateCardSchedule,
-        )
-
-        assertEquals("", vm.stateFlow.value.content.topicName)
-        assertTrue(vm.stateFlow.value.content.flashcards.isEmpty())
     }
 
     @Test
