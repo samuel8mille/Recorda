@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- **test**: Inicializar WorkManager antes do launch da activity nos testes E2E
+- **cd**: Derivar versão do app do CHANGELOG.md em vez de tag inexistente
+- **e2e**: Instalar APK do feature dinâmico no Test Lab e desabilitar config cache no OWASP
+- **e2e**: Localizar APK do feature dinâmico dinamicamente e desabilitar parallel no OWASP
+- **e2e**: Usar app bundle (.aab) para incluir o feature dinâmico no Test Lab
+- **e2e**: Mudar review_session para entrega install-time
+- **e2e**: Adicionar fusing config exigida pelo bundletool no módulo review_session
+
+### Documentation
+
+- **readme**: Documentar build e2e via AAB e regra de módulos dinâmicos
+
+### Testing
+
+- **integration+e2e**: Adicionar testes de DAO e fluxo de tópicos
+
+### Debug
+
+- **e2e**: Coletar logcat do dispositivo no Test Lab quando o job falhar
+## [0.0.1] - 2026-06-09
+
+### Bug Fixes
+
 - Increase OkHttp read/write timeout to 60s for Gemini API
 
 ### CI/CD
