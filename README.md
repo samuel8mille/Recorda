@@ -134,10 +134,50 @@ Gratuita em https://nvd.nist.gov/developers/request-an-api-key. Sem ela o scan O
 ## Qualidade
 
 ```bash
-./gradlew ktlintCheck          # formatação
-./gradlew detekt               # análise estática
-./gradlew :app:lintDebug       # lint Android
-./gradlew validateModuleGraph  # garante que :core não depende de :app
-./gradlew dependencyGuard      # detecta mudanças no grafo de dependências
-./gradlew dependencyCheckAggregate  # scan OWASP CVE (requer nvd.apiKey)
+# formatação
+./gradlew ktlintCheck
+# análise estática
+./gradlew detekt
+# lint Android
+./gradlew :app:lintDebug
+# garante que :core não depende de :app
+./gradlew validateModuleGraph
+# detecta mudanças no grafo de dependências
+./gradlew dependencyGuard
+# scan OWASP CVE (requer nvd.apiKey)
+./gradlew dependencyCheckAggregate
 ```
+
+---
+
+## Testes E2E e módulos dinâmicos
+
+Os testes instrumentados (incluindo os do `:feature:review_session`) rodam no **Firebase Test Lab via CI** (`.github/workflows/e2e.yml`), não localmente.
+
+### Build para o Test Lab
+
+```bash
+./gradlew bundleDebug assembleDebugAndroidTest
+```
+
+O Test Lab recebe o **App Bundle** (`.aab`), não o APK: `gcloud firebase test android run --app app-debug.aab` usa o bundletool para gerar o conjunto de APKs específico do dispositivo (base + splits de ABI/densidade).
+
+### Regra para módulos dinâmicos
+
+O conjunto de APKs gerado pelo bundletool para um dispositivo **não inclui módulos `on-demand`** — apenas o módulo base e seus splits. Para que um `:feature:*` dinâmico seja instalado e coberto pelo e2e, o `AndroidManifest.xml` do módulo precisa declarar:
+
+```xml
+<dist:module
+    dist:instant="false"
+    dist:title="@string/title_xxx">
+    <dist:delivery>
+        <dist:install-time />
+    </dist:delivery>
+    <dist:fusing dist:include="true" />
+</dist:module>
+```
+
+- `<dist:install-time />` faz o módulo entrar nos splits gerados para o dispositivo (em vez de ficar disponível só sob demanda)
+- `<dist:fusing dist:include="true" />` é **obrigatório em qualquer modo de entrega** — sem ele o build do bundle falha com `Module 'X' must specify its fusing configuration`
+
+Use isso como modelo ao criar novos módulos dinâmicos que precisem de cobertura e2e.
