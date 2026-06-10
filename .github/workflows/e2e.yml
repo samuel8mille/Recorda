@@ -28,7 +28,13 @@ jobs:
         run: echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
 
       - name: Build debug APK and test APK
-        run: ./gradlew assembleDebug assembleDebugAndroidTest
+        run: ./gradlew assembleDebug assembleDebugAndroidTest :feature:review_session:assembleDebug
+
+      - name: Locate dynamic feature debug APK
+        id: feature_apk
+        run: |
+          APK=$(find feature/review_session/build -name "review_session-debug.apk" | head -1)
+          echo "path=$APK" >> "$GITHUB_OUTPUT"
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -44,7 +50,7 @@ jobs:
             --type instrumentation \
             --app app/build/outputs/apk/debug/app-debug.apk \
             --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
-            --additional-apks feature/review_session/build/intermediates/apk/debug/review_session-debug.apk \
+            --additional-apks ${{ steps.feature_apk.outputs.path }} \
             --device model=MediumPhone.arm,version=33,locale=en,orientation=portrait \
             --timeout 10m \
             --results-bucket gs://recorda-e2e-results \
@@ -79,7 +85,7 @@ jobs:
       - name: Run OWASP Dependency Check
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: ./gradlew dependencyCheckAggregate "-PnvdApiKey=$NVD_API_KEY" --no-configuration-cache
+        run: ./gradlew dependencyCheckAggregate "-PnvdApiKey=$NVD_API_KEY" --no-configuration-cache --no-parallel
 
       - name: Upload OWASP report
         if: always()
