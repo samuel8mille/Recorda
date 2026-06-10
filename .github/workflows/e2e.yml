@@ -49,6 +49,12 @@ jobs:
             --results-bucket gs://recorda-e2e-results \
             --results-dir e2e-${{ github.run_number }}
 
+      - name: Fetch device logcat on failure
+        if: failure()
+        run: |
+          gsutil ls -r "gs://recorda-e2e-results/e2e-${{ github.run_number }}/**" || true
+          gsutil cat "gs://recorda-e2e-results/e2e-${{ github.run_number }}/**/logcat" 2>/dev/null || true
+
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v4
