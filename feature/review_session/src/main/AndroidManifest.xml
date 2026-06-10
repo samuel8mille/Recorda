@@ -3,17 +3,17 @@
     xmlns:dist="http://schemas.android.com/apk/distribution">
 
     <!--
-    Módulo dinâmico de exemplo: entregue sob demanda via Play Feature Delivery.
-    Serve de modelo para futuras features (ex.: geração de mapas mentais,
-    áudio-resumos) que não precisam estar no APK base.
+    Módulo dinâmico de exemplo, com entrega install-time (sempre instalado
+    junto com o APK base). Serve de modelo para futuras features (ex.: geração
+    de mapas mentais, áudio-resumos) que podem migrar para entrega sob
+    demanda quando o app for distribuído via Play Feature Delivery.
     -->
     <dist:module
         dist:instant="false"
         dist:title="@string/title_review_session">
         <dist:delivery>
-            <dist:on-demand />
+            <dist:install-time />
         </dist:delivery>
-        <dist:fusing dist:include="true" />
     </dist:module>
 
     <application>
