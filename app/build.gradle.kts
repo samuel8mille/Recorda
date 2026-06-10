@@ -237,3 +237,65 @@ tasks.register("openCoverageReport") {
         println("Coverage report: ${report.absolutePath}")
     }
 }
+
+/**
+ * Runs the instrumented tests on a connected device with the dynamic feature
+ * modules installed.
+ *
+ * `connectedDebugAndroidTest` installs only the base APK + the test APK, never
+ * the dynamic-feature splits — the ContentProviders declared by the feature
+ * modules (ReviewSessionInitProvider, MindMapSessionInitProvider) then crash the
+ * process with ClassNotFoundException before any test runs. This task automates
+ * the workaround documented in the README: `adb install-multiple` with the base
+ * APK + every feature split, install of the test APK and `am instrument`.
+ *
+ * Usage: ./gradlew :app:connectedTestWithFeatures
+ */
+tasks.register("connectedTestWithFeatures") {
+    group = "verification"
+    description = "Installs base + dynamic feature APKs and runs instrumented tests via am instrument."
+    dependsOn("assembleDebug", "assembleDebugAndroidTest")
+
+    val featurePaths = android.dynamicFeatures.toList()
+    featurePaths.forEach { dependsOn("$it:assembleDebug") }
+
+    val adbProvider = androidComponents.sdkComponents.adb
+    val rootDirFile = rootDir
+    val buildDir = layout.buildDirectory
+    val instrumentationTarget =
+        "${android.defaultConfig.applicationId}.test/${android.defaultConfig.testInstrumentationRunner}"
+
+    doLast {
+        val adb = adbProvider.get().asFile.absolutePath
+        val baseApk = buildDir.file("outputs/apk/debug/app-debug.apk").get().asFile
+        val testApk = buildDir.file("outputs/apk/androidTest/debug/app-debug-androidTest.apk").get().asFile
+        val featureApks = featurePaths.map { path ->
+            val moduleName = path.substringAfterLast(":")
+            val moduleDir = path.removePrefix(":").replace(":", "/")
+            rootDirFile.resolve("$moduleDir/build/outputs/apk/debug/$moduleName-debug.apk")
+        }
+
+        fun run(vararg command: String): String {
+            val process = ProcessBuilder(*command).redirectErrorStream(true).start()
+            val output = process.inputStream.bufferedReader().readText()
+            if (process.waitFor() != 0) {
+                throw GradleException("Comando falhou: ${command.joinToString(" ")}\n$output")
+            }
+            return output
+        }
+
+        println("Instalando base + ${featureApks.size} módulo(s) dinâmico(s)…")
+        val splitPaths = featureApks.map { it.absolutePath }.toTypedArray()
+        run(adb, "install-multiple", "-r", "-t", baseApk.absolutePath, *splitPaths)
+        run(adb, "install", "-r", "-t", testApk.absolutePath)
+
+        println("Rodando testes instrumentados ($instrumentationTarget)…")
+        val output = run(adb, "shell", "am", "instrument", "-w", "-r", instrumentationTarget)
+        val summary = output.lineSequence().lastOrNull { it.startsWith("OK (") || it.startsWith("Tests run:") }
+
+        if (!output.contains("OK (")) {
+            throw GradleException("Testes instrumentados falharam: ${summary ?: "veja o log acima"}\n$output")
+        }
+        println("Testes instrumentados: $summary")
+    }
+}

@@ -46,7 +46,7 @@ Pessoas com TDAH frequentemente têm dificuldade com memória de trabalho e auto
 - [x] Algoritmo de repetição espaçada (SM-2 ou FSRS) para agendar revisões
 - [x] Testes orais — `SpeechRecognizer` captura a resposta falada, Gemini avalia
 - [x] `TextToSpeech` para leitura em voz alta dos cards
-- [ ] Mapa mental gerado a partir dos flashcards de um tema
+- [x] Mapa mental gerado a partir dos flashcards de um tema
 - [ ] Estatísticas de retenção por tema
 - [ ] FSRS (substituir SM-2 pelo agendador mais moderno)
 
@@ -62,6 +62,7 @@ Pessoas com TDAH frequentemente têm dificuldade com memória de trabalho e auto
 :lint                   — regras Lint customizadas (NoAndroidLog, A11yHardcodedColor)
 :macrobenchmark         — benchmarks de startup e renderização
 :feature:review_session — módulo dinâmico (template para futuras features)
+:feature:mind_map       — módulo dinâmico do mapa mental gerado via Gemini
 ```
 
 O `:app` segue arquitetura **MVI + Hilt + Clean Architecture** em camadas:
@@ -157,14 +158,22 @@ Os testes instrumentados (incluindo os do `:feature:review_session`) rodam no **
 
 ### Rodando localmente (opcional, para depuração)
 
-`./gradlew :app:connectedDebugAndroidTest` **falha** com `ClassNotFoundException: ReviewSessionInitProvider`: essa task instala apenas `app-debug.apk` + o APK de testes, nunca o split do módulo dinâmico `:feature:review_session` — mesmo que o manifesto mesclado declare o provider. Para rodar localmente num emulador/dispositivo conectado, instale os APKs manualmente e dispare via `am instrument`:
+`./gradlew :app:connectedDebugAndroidTest` **falha** com `ClassNotFoundException: ReviewSessionInitProvider`: essa task instala apenas `app-debug.apk` + o APK de testes, nunca os splits dos módulos dinâmicos — mesmo que o manifesto mesclado declare os providers. Para rodar localmente num emulador/dispositivo conectado, use a task que automatiza o workaround:
 
 ```bash
-./gradlew :app:assembleDebug :app:assembleDebugAndroidTest :feature:review_session:assembleDebug
+./gradlew :app:connectedTestWithFeatures
+```
+
+Ela compila o APK base, **todos** os módulos declarados em `dynamicFeatures` e o APK de testes, instala tudo via `adb install-multiple` e dispara o `am instrument`, falhando o build se algum teste falhar. Equivale aos passos manuais:
+
+```bash
+./gradlew :app:assembleDebug :app:assembleDebugAndroidTest \
+  :feature:review_session:assembleDebug :feature:mind_map:assembleDebug
 
 adb install-multiple -r -t \
   app/build/outputs/apk/debug/app-debug.apk \
-  feature/review_session/build/outputs/apk/debug/review_session-debug.apk
+  feature/review_session/build/outputs/apk/debug/review_session-debug.apk \
+  feature/mind_map/build/outputs/apk/debug/mind_map-debug.apk
 adb install -r -t app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 
 adb shell am instrument -w -r \
