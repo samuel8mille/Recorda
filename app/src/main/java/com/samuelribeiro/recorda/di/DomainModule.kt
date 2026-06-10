@@ -1,9 +1,11 @@
 package com.samuelribeiro.recorda.di
 
+import com.samuelribeiro.recorda.domain.repository.OralTestRepository
 import com.samuelribeiro.recorda.domain.repository.ReviewRepository
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
 import com.samuelribeiro.recorda.domain.scheduler.ReviewScheduler
 import com.samuelribeiro.recorda.domain.usecase.DeleteTopicUseCase
+import com.samuelribeiro.recorda.domain.usecase.EvaluateOralAnswerUseCase
 import com.samuelribeiro.recorda.domain.usecase.GenerateFlashcardsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetFlashcardReviewsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetStoredTopicsUseCase
@@ -53,4 +55,10 @@ object DomainModule {
         scheduler: ReviewScheduler,
         repository: ReviewRepository,
     ): UpdateCardScheduleUseCase = UpdateCardScheduleUseCase(scheduler, repository)
+
+    /** Provides [EvaluateOralAnswerUseCase]. */
+    @Provides
+    fun provideEvaluateOralAnswerUseCase(
+        repository: OralTestRepository
+    ): EvaluateOralAnswerUseCase = EvaluateOralAnswerUseCase(repository)
 }

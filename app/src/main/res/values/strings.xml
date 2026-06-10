@@ -40,4 +40,10 @@
     <string name="review_nothing_due_title">Tudo em dia!</string>
     <string name="review_nothing_due_subtitle">Todos os cards de %1$s estão em dia. Volte amanhã para continuar revisando.</string>
     <string name="review_nothing_due_button">Voltar</string>
+
+    <string name="review_oral_mic_description">Responder em voz alta</string>
+    <string name="review_oral_listening">Ouvindo…</string>
+    <string name="review_oral_verdict_correct">Resposta correta!</string>
+    <string name="review_oral_verdict_partial">Quase lá</string>
+    <string name="review_oral_verdict_incorrect">Não foi dessa vez</string>
 </resources>

@@ -6,15 +6,19 @@ import androidx.work.WorkManager
 import com.google.gson.Gson
 import com.samuelribeiro.recorda.BuildConfig
 import com.samuelribeiro.recorda.data.prompt.GeminiFlashcardPromptBuilder
+import com.samuelribeiro.recorda.data.prompt.GeminiOralAnswerPromptBuilder
+import com.samuelribeiro.recorda.data.repository.OralTestRepositoryImpl
 import com.samuelribeiro.recorda.data.repository.ReviewRepositoryImpl
 import com.samuelribeiro.recorda.data.repository.TopicRepositoryImpl
 import com.samuelribeiro.recorda.data.source.local.AppDatabase
 import com.samuelribeiro.recorda.data.source.local.FlashcardReviewDao
 import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.domain.prompt.FlashcardPromptBuilder
+import com.samuelribeiro.recorda.domain.prompt.OralAnswerPromptBuilder
 import com.samuelribeiro.recorda.data.source.remote.api.GeminiApi
 import com.samuelribeiro.recorda.data.source.remote.service.GeminiService
 import com.samuelribeiro.recorda.data.source.remote.service.RetrofitGeminiService
+import com.samuelribeiro.recorda.domain.repository.OralTestRepository
 import com.samuelribeiro.recorda.domain.repository.ReviewRepository
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
 import dagger.Binds
@@ -50,6 +54,20 @@ abstract class DataModule {
     abstract fun bindFlashcardPromptBuilder(
         impl: GeminiFlashcardPromptBuilder
     ): FlashcardPromptBuilder
+
+    /** Binds [OralTestRepositoryImpl] as the [OralTestRepository] implementation. */
+    @Binds
+    @Singleton
+    abstract fun bindOralTestRepository(
+        impl: OralTestRepositoryImpl
+    ): OralTestRepository
+
+    /** Binds [GeminiOralAnswerPromptBuilder] as the [OralAnswerPromptBuilder] implementation. */
+    @Binds
+    @Singleton
+    abstract fun bindOralAnswerPromptBuilder(
+        impl: GeminiOralAnswerPromptBuilder
+    ): OralAnswerPromptBuilder
 
     companion object {
 

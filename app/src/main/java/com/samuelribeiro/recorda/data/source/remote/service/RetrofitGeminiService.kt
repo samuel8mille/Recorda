@@ -16,7 +16,7 @@ import javax.inject.Named
  */
 class RetrofitGeminiService @Inject constructor(
     private val api: GeminiApi,
-    @Named("geminiApiKey") private val apiKey: String,
+    @param:Named("geminiApiKey") private val apiKey: String,
 ) : GeminiService {
 
     override suspend fun generateContent(prompt: String): String {

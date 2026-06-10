@@ -3,9 +3,13 @@ package com.samuelribeiro.recorda.presentation.ui.review
 import com.samuelribeiro.recorda.domain.model.CardRating
 import com.samuelribeiro.recorda.domain.model.Flashcard
 import com.samuelribeiro.recorda.domain.model.FlashcardReviewState
+import com.samuelribeiro.recorda.domain.model.OralAnswerEvaluation
+import com.samuelribeiro.recorda.domain.model.OralAnswerVerdict
 import com.samuelribeiro.recorda.domain.model.Topic
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
+import com.samuelribeiro.recorda.domain.speech.SpeechToTextEngine
 import com.samuelribeiro.recorda.domain.tts.TextToSpeechEngine
+import com.samuelribeiro.recorda.domain.usecase.EvaluateOralAnswerUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetFlashcardReviewsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetTopicUseCase
 import com.samuelribeiro.recorda.domain.usecase.UpdateCardScheduleUseCase
@@ -23,6 +27,7 @@ import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -36,6 +41,8 @@ class ReviewViewModelTest {
     private val getFlashcardReviews: GetFlashcardReviewsUseCase = mockk()
     private val updateCardSchedule: UpdateCardScheduleUseCase = mockk()
     private val ttsEngine: TextToSpeechEngine = mockk(relaxed = true)
+    private val speechToTextEngine: SpeechToTextEngine = mockk(relaxed = true)
+    private val evaluateOralAnswerUseCase: EvaluateOralAnswerUseCase = mockk()
 
     private val flashcards = listOf(
         Flashcard("O que é Kotlin?", "Uma linguagem JVM moderna"),
@@ -61,6 +68,8 @@ class ReviewViewModelTest {
             getFlashcardReviewsUseCase = getFlashcardReviews,
             updateCardScheduleUseCase = updateCardSchedule,
             ttsEngine = ttsEngine,
+            speechToTextEngine = speechToTextEngine,
+            evaluateOralAnswerUseCase = evaluateOralAnswerUseCase,
         )
 
     @Test
@@ -90,6 +99,8 @@ class ReviewViewModelTest {
             getFlashcardReviewsUseCase = getFlashcardReviews,
             updateCardScheduleUseCase = updateCardSchedule,
             ttsEngine = ttsEngine,
+            speechToTextEngine = speechToTextEngine,
+            evaluateOralAnswerUseCase = evaluateOralAnswerUseCase,
         )
 
         assertEquals("", vm.stateFlow.value.content.topicName)
@@ -296,4 +307,60 @@ class ReviewViewModelTest {
 
         verify { ttsEngine.stop() }
     }
+
+    @Test
+    fun `StartOralAnswer with correct spoken answer flips card, sets evaluation and speaks the answer`() = runTest {
+        coEvery { speechToTextEngine.listen() } returns Result.success("Uma linguagem JVM moderna")
+        val evaluation = OralAnswerEvaluation(OralAnswerVerdict.CORRECT, "Muito bem!")
+        coEvery {
+            evaluateOralAnswerUseCase(flashcards[0].question, flashcards[0].answer, "Uma linguagem JVM moderna")
+        } returns flowOf(Result.success(evaluation))
+        val vm = createViewModel()
+
+        vm.onSendEvent(StartOralAnswer)
+
+        assertFalse(vm.stateFlow.value.content.isListening)
+        assertTrue(vm.stateFlow.value.content.isFlipped)
+        assertEquals(evaluation, vm.stateFlow.value.content.oralEvaluation)
+        verify { ttsEngine.speak(flashcards[0].answer) }
+    }
+
+    @Test
+    fun `StartOralAnswer with failed speech recognition leaves card unflipped without evaluation`() = runTest {
+        coEvery { speechToTextEngine.listen() } returns Result.failure(Exception("no speech"))
+        val vm = createViewModel()
+
+        vm.onSendEvent(StartOralAnswer)
+
+        assertFalse(vm.stateFlow.value.content.isListening)
+        assertFalse(vm.stateFlow.value.content.isFlipped)
+        assertNull(vm.stateFlow.value.content.oralEvaluation)
+    }
+
+    @Test
+    fun `FlipCard clears a previous oral evaluation`() = runTest {
+        coEvery { speechToTextEngine.listen() } returns Result.success("Uma linguagem JVM moderna")
+        coEvery { evaluateOralAnswerUseCase(any(), any(), any()) } returns
+            flowOf(Result.success(OralAnswerEvaluation(OralAnswerVerdict.CORRECT, "Muito bem!")))
+        val vm = createViewModel()
+        vm.onSendEvent(StartOralAnswer)
+
+        vm.onSendEvent(FlipCard)
+
+        assertNull(vm.stateFlow.value.content.oralEvaluation)
+    }
+
+    @Test
+    fun `RateCard clears a previous oral evaluation`() = runTest {
+        coEvery { speechToTextEngine.listen() } returns Result.success("Uma linguagem JVM moderna")
+        coEvery { evaluateOralAnswerUseCase(any(), any(), any()) } returns
+            flowOf(Result.success(OralAnswerEvaluation(OralAnswerVerdict.CORRECT, "Muito bem!")))
+        val vm = createViewModel()
+        vm.onSendEvent(StartOralAnswer)
+
+        vm.onSendEvent(RateCard(CardRating.GOOD))
+
+        assertNull(vm.stateFlow.value.content.oralEvaluation)
+    }
+
 }

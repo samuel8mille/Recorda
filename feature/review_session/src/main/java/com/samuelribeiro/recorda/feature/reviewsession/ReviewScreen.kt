@@ -1,5 +1,9 @@
 package com.samuelribeiro.recorda.feature.reviewsession
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -13,7 +17,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,22 +34,28 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.samuelribeiro.recorda.R
 import com.samuelribeiro.recorda.domain.model.CardRating
 import com.samuelribeiro.recorda.domain.model.Flashcard
+import com.samuelribeiro.recorda.domain.model.OralAnswerEvaluation
+import com.samuelribeiro.recorda.domain.model.OralAnswerVerdict
 import com.samuelribeiro.recorda.presentation.ui.review.FlipCard
 import com.samuelribeiro.recorda.presentation.ui.review.RateCard
 import com.samuelribeiro.recorda.presentation.ui.review.ReviewUiState
 import com.samuelribeiro.recorda.presentation.ui.review.ReviewViewModel
+import com.samuelribeiro.recorda.presentation.ui.review.StartOralAnswer
 import com.samuelribeiro.recorda.ui.theme.HorizontalPadding
 import com.samuelribeiro.recorda.ui.theme.SpaceLarge
 import com.samuelribeiro.recorda.ui.theme.SpaceMedium
@@ -51,10 +63,23 @@ import com.samuelribeiro.recorda.ui.theme.SpaceMedium
 @Composable
 fun ReviewScreen(viewModel: ReviewViewModel, onNavigateBack: () -> Unit) {
     val uiState by viewModel.stateFlow.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted -> if (granted) viewModel.onSendEvent(StartOralAnswer) }
     ReviewContent(
         uiState = uiState.content,
         onFlipCard = { viewModel.onSendEvent(FlipCard) },
         onRateCard = { rating -> viewModel.onSendEvent(RateCard(rating)) },
+        onStartOralAnswer = {
+            val isGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+                PackageManager.PERMISSION_GRANTED
+            if (isGranted) {
+                viewModel.onSendEvent(StartOralAnswer)
+            } else {
+                permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
+        },
         onNavigateBack = onNavigateBack,
     )
 }
@@ -65,6 +90,7 @@ internal fun ReviewContent(
     uiState: ReviewUiState,
     onFlipCard: () -> Unit,
     onRateCard: (CardRating) -> Unit,
+    onStartOralAnswer: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     if (uiState.isNothingDue) {
@@ -130,14 +156,38 @@ internal fun ReviewContent(
                     onClick = onFlipCard,
                 )
                 Spacer(Modifier.height(SpaceLarge))
+                uiState.oralEvaluation?.let { evaluation ->
+                    OralEvaluationBanner(evaluation = evaluation)
+                    Spacer(Modifier.height(SpaceMedium))
+                }
                 if (uiState.isFlipped) {
                     RatingButtons(onRateCard = onRateCard)
+                } else if (uiState.isListening) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(SpaceMedium),
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                        Text(
+                            text = stringResource(R.string.review_oral_listening),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        )
+                    }
                 } else {
-                    Text(
-                        text = stringResource(R.string.review_tap_to_reveal),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = stringResource(R.string.review_tap_to_reveal),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        )
+                        IconButton(onClick = onStartOralAnswer) {
+                            Icon(
+                                imageVector = Icons.Default.Mic,
+                                contentDescription = stringResource(R.string.review_oral_mic_description),
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -179,6 +229,27 @@ private fun FlashcardView(
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
             )
+        }
+    }
+}
+
+@Composable
+private fun OralEvaluationBanner(evaluation: OralAnswerEvaluation) {
+    val (containerColor, titleRes) = when (evaluation.verdict) {
+        OralAnswerVerdict.CORRECT -> MaterialTheme.colorScheme.primaryContainer to R.string.review_oral_verdict_correct
+        OralAnswerVerdict.PARTIAL -> MaterialTheme.colorScheme.tertiaryContainer to R.string.review_oral_verdict_partial
+        OralAnswerVerdict.INCORRECT -> MaterialTheme.colorScheme.errorContainer to R.string.review_oral_verdict_incorrect
+    }
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.elevatedCardColors(containerColor = containerColor),
+    ) {
+        Column(
+            modifier = Modifier.padding(SpaceMedium),
+            verticalArrangement = Arrangement.spacedBy(SpaceMedium / 4),
+        ) {
+            Text(text = stringResource(titleRes), style = MaterialTheme.typography.titleMedium)
+            Text(text = evaluation.feedback, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
