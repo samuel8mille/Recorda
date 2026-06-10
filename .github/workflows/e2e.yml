@@ -27,14 +27,8 @@ jobs:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
 
-      - name: Build debug APK and test APK
-        run: ./gradlew assembleDebug assembleDebugAndroidTest :feature:review_session:assembleDebug
-
-      - name: Locate dynamic feature debug APK
-        id: feature_apk
-        run: |
-          APK=$(find feature/review_session/build -name "review_session-debug.apk" | head -1)
-          echo "path=$APK" >> "$GITHUB_OUTPUT"
+      - name: Build app bundle and test APK
+        run: ./gradlew bundleDebug assembleDebugAndroidTest
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -48,9 +42,8 @@ jobs:
         run: |
           gcloud firebase test android run \
             --type instrumentation \
-            --app app/build/outputs/apk/debug/app-debug.apk \
+            --app app/build/outputs/bundle/debug/app-debug.aab \
             --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
-            --additional-apks ${{ steps.feature_apk.outputs.path }} \
             --device model=MediumPhone.arm,version=33,locale=en,orientation=portrait \
             --timeout 10m \
             --results-bucket gs://recorda-e2e-results \
