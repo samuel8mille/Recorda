@@ -24,6 +24,10 @@ interface TopicDao {
     @Query("UPDATE topics SET status = 'DONE', flashcardsJson = :flashcardsJson WHERE id = :id")
     suspend fun markDone(id: String, flashcardsJson: String)
 
+    /** Persists the generated mind map for the topic with [id]. */
+    @Query("UPDATE topics SET mindMapJson = :mindMapJson WHERE id = :id")
+    suspend fun updateMindMap(id: String, mindMapJson: String)
+
     /** Deletes the topic with [id] from the database. */
     @Query("DELETE FROM topics WHERE id = :id")
     suspend fun deleteById(id: String)

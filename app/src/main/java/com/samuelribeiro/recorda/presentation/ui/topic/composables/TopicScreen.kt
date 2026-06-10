@@ -43,6 +43,7 @@ import com.samuelribeiro.recorda.presentation.ui.topic.TopicViewModel
 fun TopicScreen(
     viewModel: TopicViewModel,
     onNavigateToReview: (String) -> Unit,
+    onNavigateToMindMap: (String) -> Unit,
 ) {
     val uiState by viewModel.stateFlow.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -69,6 +70,7 @@ fun TopicScreen(
         snackbarHostState = snackbarHostState,
         onGenerateFlashcardsClick = { topic -> viewModel.onSendEvent(OnGenerateFlashcardsClick(topic)) },
         onReviewClick = onNavigateToReview,
+        onMindMapClick = onNavigateToMindMap,
         onDeleteClick = { topicId -> viewModel.onSendEvent(RequestDeleteTopic(topicId)) },
         onConfirmDelete = { viewModel.onSendEvent(ConfirmDeleteTopic) },
         onDismissDelete = { viewModel.onSendEvent(DismissDeleteDialog) },
@@ -81,6 +83,7 @@ fun TopicScreen(
     snackbarHostState: SnackbarHostState,
     onGenerateFlashcardsClick: (String) -> Unit,
     onReviewClick: (String) -> Unit,
+    onMindMapClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
@@ -91,6 +94,7 @@ fun TopicScreen(
             snackbarHostState = snackbarHostState,
             onGenerateFlashcardsClick = onGenerateFlashcardsClick,
             onReviewClick = onReviewClick,
+            onMindMapClick = onMindMapClick,
             onDeleteClick = onDeleteClick,
             onConfirmDelete = onConfirmDelete,
             onDismissDelete = onDismissDelete,
@@ -105,6 +109,7 @@ fun TopicScaffold(
     snackbarHostState: SnackbarHostState,
     onGenerateFlashcardsClick: (String) -> Unit,
     onReviewClick: (String) -> Unit,
+    onMindMapClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
@@ -147,6 +152,7 @@ fun TopicScaffold(
                 uiState = uiState,
                 onGenerateFlashcardsClick = onGenerateFlashcardsClick,
                 onReviewClick = onReviewClick,
+                onMindMapClick = onMindMapClick,
                 onDeleteClick = onDeleteClick,
                 onConfirmDelete = onConfirmDelete,
                 onDismissDelete = onDismissDelete,

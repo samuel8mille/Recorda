@@ -6,6 +6,10 @@
          de recursos do módulo base pelo bundletool ao empacotar o app bundle. -->
     <string name="title_review_session" translatable="false">Sessão de revisão</string>
 
+    <!-- Título do módulo dinâmico :feature:mind_map, exigido na tabela
+         de recursos do módulo base pelo bundletool ao empacotar o app bundle. -->
+    <string name="title_mind_map" translatable="false">Mapa mental</string>
+
     <string name="state_loading">Gerando seus flashcards…</string>
 
     <string name="topic_input_hint">Sobre o que você quer estudar?</string>
@@ -15,6 +19,7 @@
     <string name="topic_list_title">Seus temas</string>
     <string name="topic_list_empty_message">Nenhum flashcard ainda. Digite um tema acima para começar.</string>
     <string name="topic_review_button">Revisar</string>
+    <string name="topic_mind_map_button">Mapa mental</string>
     <string name="topic_delete_button_description">Excluir tópico</string>
     <string name="topic_delete_dialog_title">Excluir tópico?</string>
     <string name="topic_delete_dialog_message">Todos os flashcards e o histórico de revisão de %1$s serão removidos permanentemente.</string>
@@ -46,4 +51,10 @@
     <string name="review_oral_verdict_correct">Resposta correta!</string>
     <string name="review_oral_verdict_partial">Quase lá</string>
     <string name="review_oral_verdict_incorrect">Não foi dessa vez</string>
+
+    <string name="mind_map_screen_title">Mapa mental</string>
+    <string name="mind_map_state_loading">Gerando mapa mental…</string>
+    <string name="mind_map_error_generation">Não foi possível gerar o mapa mental. Tente novamente.</string>
+    <string name="mind_map_expand_description">Expandir</string>
+    <string name="mind_map_collapse_description">Recolher</string>
 </resources>

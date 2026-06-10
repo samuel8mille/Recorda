@@ -87,6 +87,17 @@ class TopicDaoTest {
     }
 
     @Test
+    fun updateMindMap_updates_mindMapJson() = runBlocking {
+        dao.insert(TopicEntity(id = "t1", name = "Kotlin", flashcardsJson = "[]"))
+        val json = """{"id":"0","title":"Kotlin","children":[]}"""
+        dao.updateMindMap("t1", json)
+
+        val result = dao.getById("t1").first()
+
+        assertEquals(json, result?.mindMapJson)
+    }
+
+    @Test
     fun deleteById_removes_topic_from_database() = runBlocking {
         dao.insert(TopicEntity(id = "t1", name = "Kotlin", flashcardsJson = "[]"))
         dao.deleteById("t1")

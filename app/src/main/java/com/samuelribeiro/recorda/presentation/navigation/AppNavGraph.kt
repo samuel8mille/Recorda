@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.samuelribeiro.recorda.presentation.ui.mindmap.MindMapViewModel
 import com.samuelribeiro.recorda.presentation.ui.review.ReviewViewModel
 import com.samuelribeiro.recorda.presentation.ui.topic.TopicUiState
 import com.samuelribeiro.recorda.presentation.ui.topic.TopicViewModel
@@ -22,6 +23,7 @@ fun AppNavGraph(navController: NavHostController) {
             TopicScreen(
                 viewModel = viewModel,
                 onNavigateToReview = { topicId -> navController.navigate(AppRoute.review(topicId)) },
+                onNavigateToMindMap = { topicId -> navController.navigate(AppRoute.mindMap(topicId)) },
             )
         }
         composable(
@@ -33,6 +35,16 @@ fun AppNavGraph(navController: NavHostController) {
                 factory.create(topicId)
             }
             ReviewSessionEntry.content(viewModel) { navController.popBackStack() }
+        }
+        composable(
+            route = AppRoute.MIND_MAP,
+            arguments = listOf(navArgument("topicId") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val topicId = checkNotNull(backStackEntry.arguments?.getString("topicId"))
+            val viewModel = getViewModel<MindMapViewModel, MindMapViewModel.ViewModelFactory> { factory ->
+                factory.create(topicId)
+            }
+            MindMapSessionEntry.content(viewModel) { navController.popBackStack() }
         }
     }
 }

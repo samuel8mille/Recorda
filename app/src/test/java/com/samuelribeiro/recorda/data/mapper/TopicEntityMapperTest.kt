@@ -4,9 +4,11 @@ import com.google.gson.Gson
 import com.samuelribeiro.recorda.data.source.local.TopicEntity
 import com.samuelribeiro.recorda.data.source.local.TopicStatus
 import com.samuelribeiro.recorda.domain.model.Flashcard
+import com.samuelribeiro.recorda.domain.model.MindMapNode
 import com.samuelribeiro.recorda.domain.model.Topic
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class TopicEntityMapperTest {
@@ -63,5 +65,26 @@ class TopicEntityMapperTest {
         val restored = mapper.toDomain(entity)
 
         assertEquals(topic, restored)
+    }
+
+    @Test
+    fun `toDomain returns null mindMap for blank json`() {
+        val entity = TopicEntity(id = "1", name = "Test", flashcardsJson = "", status = TopicStatus.PENDING)
+
+        val result = mapper.toDomain(entity)
+
+        assertNull(result.mindMap)
+    }
+
+    @Test
+    fun `round-trip preserves mind map`() {
+        val mindMap = MindMapNode(id = "0", title = "Kotlin", children = listOf(MindMapNode(id = "0-0", title = "Sintaxe")))
+        val topicWithMindMap = topic.copy(mindMap = mindMap)
+
+        val entity = mapper.toEntity(topicWithMindMap)
+        val restored = mapper.toDomain(entity)
+
+        assertEquals(topicWithMindMap, restored)
+        assertEquals(mindMap, restored.mindMap)
     }
 }

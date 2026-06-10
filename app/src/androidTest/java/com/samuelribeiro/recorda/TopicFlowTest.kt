@@ -14,6 +14,7 @@ import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.data.source.local.TopicEntity
 import com.samuelribeiro.recorda.data.source.local.TopicStatus
 import com.samuelribeiro.recorda.presentation.ui.topic.composables.DELETE_BUTTON_TEST_TAG
+import com.samuelribeiro.recorda.presentation.ui.topic.composables.MIND_MAP_BUTTON_TEST_TAG
 import com.samuelribeiro.recorda.presentation.ui.topic.composables.REVIEW_BUTTON_TEST_TAG
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -72,6 +73,15 @@ class TopicFlowTest {
         waitForTopicCard()
 
         composeRule.onNodeWithTag(REVIEW_BUTTON_TEST_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun seeded_topic_card_has_mind_map_button() {
+        seedTopic()
+
+        waitForTopicCard()
+
+        composeRule.onNodeWithTag(MIND_MAP_BUTTON_TEST_TAG).assertIsDisplayed()
     }
 
     @Test

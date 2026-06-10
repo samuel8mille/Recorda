@@ -42,6 +42,7 @@ android {
     namespace = "com.samuelribeiro.recorda"
     // Dynamic features — módulos adicionados sob demanda:
     dynamicFeatures.add(":feature:review_session")
+    dynamicFeatures.add(":feature:mind_map")
     compileSdk = 37
 
     defaultConfig {

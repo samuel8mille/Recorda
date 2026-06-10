@@ -57,6 +57,7 @@ const val INPUT_ERROR_TEST_TAG = "InputErrorTestTag"
 const val TOPIC_ITEM_TEST_TAG = "TopicItemTestTag"
 const val TOPIC_INPUT_TEST_TAG = "TopicInput"
 const val REVIEW_BUTTON_TEST_TAG = "ReviewButtonTestTag"
+const val MIND_MAP_BUTTON_TEST_TAG = "MindMapButtonTestTag"
 const val DELETE_BUTTON_TEST_TAG = "DeleteButtonTestTag"
 
 @Composable
@@ -64,6 +65,7 @@ fun TopicContent(
     uiState: TopicUiState,
     onGenerateFlashcardsClick: (String) -> Unit,
     onReviewClick: (String) -> Unit,
+    onMindMapClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
@@ -126,6 +128,7 @@ fun TopicContent(
                     TopicContentListItem(
                         item = item,
                         onReviewClick = onReviewClick,
+                        onMindMapClick = onMindMapClick,
                         onDeleteClick = onDeleteClick,
                     )
                 }
@@ -215,6 +218,7 @@ fun TopicContentHeader(
 fun TopicContentListItem(
     item: Topic,
     onReviewClick: (String) -> Unit,
+    onMindMapClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
 ) {
     ElevatedCard(
@@ -244,6 +248,12 @@ fun TopicContentListItem(
                     contentDescription = stringResource(R.string.topic_delete_button_description),
                     tint = MaterialTheme.colorScheme.error,
                 )
+            }
+            OutlinedButton(
+                modifier = Modifier.testTag(MIND_MAP_BUTTON_TEST_TAG),
+                onClick = { onMindMapClick(item.id) },
+            ) {
+                Text(stringResource(R.string.topic_mind_map_button))
             }
             OutlinedButton(
                 modifier = Modifier.testTag(REVIEW_BUTTON_TEST_TAG),

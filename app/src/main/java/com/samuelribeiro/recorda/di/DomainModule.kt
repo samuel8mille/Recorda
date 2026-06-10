@@ -1,5 +1,6 @@
 package com.samuelribeiro.recorda.di
 
+import com.samuelribeiro.recorda.domain.repository.MindMapRepository
 import com.samuelribeiro.recorda.domain.repository.OralTestRepository
 import com.samuelribeiro.recorda.domain.repository.ReviewRepository
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
@@ -7,6 +8,7 @@ import com.samuelribeiro.recorda.domain.scheduler.ReviewScheduler
 import com.samuelribeiro.recorda.domain.usecase.DeleteTopicUseCase
 import com.samuelribeiro.recorda.domain.usecase.EvaluateOralAnswerUseCase
 import com.samuelribeiro.recorda.domain.usecase.GenerateFlashcardsUseCase
+import com.samuelribeiro.recorda.domain.usecase.GenerateMindMapUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetFlashcardReviewsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetStoredTopicsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetTopicUseCase
@@ -61,4 +63,10 @@ object DomainModule {
     fun provideEvaluateOralAnswerUseCase(
         repository: OralTestRepository
     ): EvaluateOralAnswerUseCase = EvaluateOralAnswerUseCase(repository)
+
+    /** Provides [GenerateMindMapUseCase]. */
+    @Provides
+    fun provideGenerateMindMapUseCase(
+        repository: MindMapRepository
+    ): GenerateMindMapUseCase = GenerateMindMapUseCase(repository)
 }

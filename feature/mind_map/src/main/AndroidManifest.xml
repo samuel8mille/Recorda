@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:dist="http://schemas.android.com/apk/distribution">
+
+    <!--
+    Módulo dinâmico do mapa mental, com entrega install-time (sempre instalado
+    junto com o APK base), seguindo o mesmo padrão de :feature:review_session.
+    -->
+    <dist:module
+        dist:instant="false"
+        dist:title="@string/title_mind_map">
+        <dist:delivery>
+            <dist:install-time />
+        </dist:delivery>
+        <dist:fusing dist:include="true" />
+    </dist:module>
+
+    <application>
+        <!--
+        Registers MindMapScreen into MindMapSessionEntry before Application.onCreate().
+        This lets :app navigate to MindMapScreen without importing it directly,
+        preserving the dynamic-feature dependency direction.
+        -->
+        <provider
+            android:name=".MindMapSessionInitProvider"
+            android:authorities="${applicationId}.mind_map_init"
+            android:exported="false" />
+    </application>
+
+</manifest>
