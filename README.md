@@ -43,11 +43,12 @@ Pessoas com TDAH frequentemente têm dificuldade com memória de trabalho e auto
 
 ## Roadmap
 
-- [ ] Algoritmo de repetição espaçada (SM-2 ou FSRS) para agendar revisões
-- [ ] Testes orais — `SpeechRecognizer` captura a resposta falada, Gemini avalia
-- [ ] `TextToSpeech` para leitura em voz alta dos cards
+- [x] Algoritmo de repetição espaçada (SM-2 ou FSRS) para agendar revisões
+- [x] Testes orais — `SpeechRecognizer` captura a resposta falada, Gemini avalia
+- [x] `TextToSpeech` para leitura em voz alta dos cards
 - [ ] Mapa mental gerado a partir dos flashcards de um tema
 - [ ] Estatísticas de retenção por tema
+- [ ] FSRS (substituir SM-2 pelo agendador mais moderno)
 
 ---
 
@@ -153,6 +154,24 @@ Gratuita em https://nvd.nist.gov/developers/request-an-api-key. Sem ela o scan O
 ## Testes E2E e módulos dinâmicos
 
 Os testes instrumentados (incluindo os do `:feature:review_session`) rodam no **Firebase Test Lab via CI** (`.github/workflows/e2e.yml`), não localmente.
+
+### Rodando localmente (opcional, para depuração)
+
+`./gradlew :app:connectedDebugAndroidTest` **falha** com `ClassNotFoundException: ReviewSessionInitProvider`: essa task instala apenas `app-debug.apk` + o APK de testes, nunca o split do módulo dinâmico `:feature:review_session` — mesmo que o manifesto mesclado declare o provider. Para rodar localmente num emulador/dispositivo conectado, instale os APKs manualmente e dispare via `am instrument`:
+
+```bash
+./gradlew :app:assembleDebug :app:assembleDebugAndroidTest :feature:review_session:assembleDebug
+
+adb install-multiple -r -t \
+  app/build/outputs/apk/debug/app-debug.apk \
+  feature/review_session/build/outputs/apk/debug/review_session-debug.apk
+adb install -r -t app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+
+adb shell am instrument -w -r \
+  com.samuelribeiro.recorda.test/com.samuelribeiro.recorda.HiltTestRunner
+```
+
+> Na primeira execução após uma instalação limpa, é possível ver uma falha isolada e não-determinística (ex.: timing de cold-start). Rode novamente antes de investigar — se a segunda execução passar 100%, foi flake.
 
 ### Build para o Test Lab
 
