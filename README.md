@@ -47,7 +47,7 @@ Pessoas com TDAH frequentemente têm dificuldade com memória de trabalho e auto
 - [x] Testes orais — `SpeechRecognizer` captura a resposta falada, Gemini avalia
 - [x] `TextToSpeech` para leitura em voz alta dos cards
 - [x] Mapa mental gerado a partir dos flashcards de um tema
-- [ ] Tela de estudo por tema — conteúdo de leitura gerado por IA, com cards dos principais tópicos e detalhes visuais para aprendizado
+- [x] Tela de estudo por tema — conteúdo de leitura gerado por IA, com cards dos principais tópicos e detalhes visuais para aprendizado
 - [ ] Estatísticas de retenção por tema
 - [ ] FSRS (substituir SM-2 pelo agendador mais moderno)
 
@@ -64,6 +64,7 @@ Pessoas com TDAH frequentemente têm dificuldade com memória de trabalho e auto
 :macrobenchmark         — benchmarks de startup e renderização
 :feature:review_session — módulo dinâmico (template para futuras features)
 :feature:mind_map       — módulo dinâmico do mapa mental gerado via Gemini
+:feature:study          — módulo dinâmico da tela de estudo (guia via Gemini + imagens da Wikipédia)
 ```
 
 O `:app` segue arquitetura **MVI + Hilt + Clean Architecture** em camadas:
