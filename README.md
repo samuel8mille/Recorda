@@ -47,6 +47,7 @@ Pessoas com TDAH frequentemente têm dificuldade com memória de trabalho e auto
 - [x] Testes orais — `SpeechRecognizer` captura a resposta falada, Gemini avalia
 - [x] `TextToSpeech` para leitura em voz alta dos cards
 - [x] Mapa mental gerado a partir dos flashcards de um tema
+- [ ] Tela de estudo por tema — conteúdo de leitura gerado por IA, com cards dos principais tópicos e detalhes visuais para aprendizado
 - [ ] Estatísticas de retenção por tema
 - [ ] FSRS (substituir SM-2 pelo agendador mais moderno)
 
