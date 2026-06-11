@@ -5,6 +5,8 @@ import com.samuelribeiro.recorda.data.source.local.TopicEntity
 import com.samuelribeiro.recorda.data.source.local.TopicStatus
 import com.samuelribeiro.recorda.domain.model.Flashcard
 import com.samuelribeiro.recorda.domain.model.MindMapNode
+import com.samuelribeiro.recorda.domain.model.StudyGuide
+import com.samuelribeiro.recorda.domain.model.StudySection
 import com.samuelribeiro.recorda.domain.model.Topic
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -86,5 +88,38 @@ class TopicEntityMapperTest {
 
         assertEquals(topicWithMindMap, restored)
         assertEquals(mindMap, restored.mindMap)
+    }
+
+    @Test
+    fun `toDomain returns null study guide for blank json`() {
+        val entity = TopicEntity(id = "1", name = "Test", flashcardsJson = "", status = TopicStatus.PENDING)
+
+        val result = mapper.toDomain(entity)
+
+        assertNull(result.studyGuide)
+    }
+
+    @Test
+    fun `round-trip preserves study guide`() {
+        val guide = StudyGuide(
+            sections = listOf(
+                StudySection(
+                    id = "0",
+                    title = "Sintaxe",
+                    emoji = "📝",
+                    summary = "Resumo",
+                    keyPoints = listOf("Ponto 1"),
+                    analogy = "Como uma receita",
+                    imageUrl = "https://img/s.jpg",
+                ),
+            ),
+        )
+        val topicWithGuide = topic.copy(studyGuide = guide)
+
+        val entity = mapper.toEntity(topicWithGuide)
+        val restored = mapper.toDomain(entity)
+
+        assertEquals(topicWithGuide, restored)
+        assertEquals(guide, restored.studyGuide)
     }
 }

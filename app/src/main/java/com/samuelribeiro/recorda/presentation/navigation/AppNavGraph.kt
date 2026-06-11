@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.samuelribeiro.recorda.presentation.ui.mindmap.MindMapViewModel
 import com.samuelribeiro.recorda.presentation.ui.review.ReviewViewModel
+import com.samuelribeiro.recorda.presentation.ui.study.StudyViewModel
 import com.samuelribeiro.recorda.presentation.ui.topic.TopicUiState
 import com.samuelribeiro.recorda.presentation.ui.topic.TopicViewModel
 import com.samuelribeiro.recorda.presentation.ui.topic.composables.TopicScreen
@@ -24,6 +25,7 @@ fun AppNavGraph(navController: NavHostController) {
                 viewModel = viewModel,
                 onNavigateToReview = { topicId -> navController.navigate(AppRoute.review(topicId)) },
                 onNavigateToMindMap = { topicId -> navController.navigate(AppRoute.mindMap(topicId)) },
+                onNavigateToStudy = { topicId -> navController.navigate(AppRoute.study(topicId)) },
             )
         }
         composable(
@@ -45,6 +47,16 @@ fun AppNavGraph(navController: NavHostController) {
                 factory.create(topicId)
             }
             MindMapSessionEntry.content(viewModel) { navController.popBackStack() }
+        }
+        composable(
+            route = AppRoute.STUDY,
+            arguments = listOf(navArgument("topicId") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val topicId = checkNotNull(backStackEntry.arguments?.getString("topicId"))
+            val viewModel = getViewModel<StudyViewModel, StudyViewModel.ViewModelFactory> { factory ->
+                factory.create(topicId)
+            }
+            StudySessionEntry.content(viewModel) { navController.popBackStack() }
         }
     }
 }

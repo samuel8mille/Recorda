@@ -98,6 +98,17 @@ class TopicDaoTest {
     }
 
     @Test
+    fun updateStudyGuide_updates_studyGuideJson() = runBlocking {
+        dao.insert(TopicEntity(id = "t1", name = "Kotlin", flashcardsJson = "[]"))
+        val json = """{"sections":[{"id":"0","title":"Sintaxe","emoji":"x","summary":"s","keyPoints":[]}]}"""
+        dao.updateStudyGuide("t1", json)
+
+        val result = dao.getById("t1").first()
+
+        assertEquals(json, result?.studyGuideJson)
+    }
+
+    @Test
     fun deleteById_removes_topic_from_database() = runBlocking {
         dao.insert(TopicEntity(id = "t1", name = "Kotlin", flashcardsJson = "[]"))
         dao.deleteById("t1")

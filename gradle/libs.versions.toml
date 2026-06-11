@@ -42,6 +42,7 @@ mockk = "1.14.11"
 turbine = "1.2.1"
 owasp-dependency-check = "12.2.2"
 chucker = "4.1.0"
+coil = "3.3.0"
 dependency-guard = "0.5.0"
 navigation-compose = "2.8.9"
 
@@ -59,6 +60,9 @@ androidx-activity-compose = { group = "androidx.activity", name = "activity-comp
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
+
+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
+coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
 androidx-compose-material = { module = "androidx.compose.material:material", version.ref = "compose" }

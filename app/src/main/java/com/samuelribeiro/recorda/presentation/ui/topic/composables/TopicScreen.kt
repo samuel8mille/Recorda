@@ -44,6 +44,7 @@ fun TopicScreen(
     viewModel: TopicViewModel,
     onNavigateToReview: (String) -> Unit,
     onNavigateToMindMap: (String) -> Unit,
+    onNavigateToStudy: (String) -> Unit,
 ) {
     val uiState by viewModel.stateFlow.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -71,6 +72,7 @@ fun TopicScreen(
         onGenerateFlashcardsClick = { topic -> viewModel.onSendEvent(OnGenerateFlashcardsClick(topic)) },
         onReviewClick = onNavigateToReview,
         onMindMapClick = onNavigateToMindMap,
+        onStudyClick = onNavigateToStudy,
         onDeleteClick = { topicId -> viewModel.onSendEvent(RequestDeleteTopic(topicId)) },
         onConfirmDelete = { viewModel.onSendEvent(ConfirmDeleteTopic) },
         onDismissDelete = { viewModel.onSendEvent(DismissDeleteDialog) },
@@ -84,6 +86,7 @@ fun TopicScreen(
     onGenerateFlashcardsClick: (String) -> Unit,
     onReviewClick: (String) -> Unit,
     onMindMapClick: (String) -> Unit,
+    onStudyClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
@@ -95,6 +98,7 @@ fun TopicScreen(
             onGenerateFlashcardsClick = onGenerateFlashcardsClick,
             onReviewClick = onReviewClick,
             onMindMapClick = onMindMapClick,
+            onStudyClick = onStudyClick,
             onDeleteClick = onDeleteClick,
             onConfirmDelete = onConfirmDelete,
             onDismissDelete = onDismissDelete,
@@ -110,6 +114,7 @@ fun TopicScaffold(
     onGenerateFlashcardsClick: (String) -> Unit,
     onReviewClick: (String) -> Unit,
     onMindMapClick: (String) -> Unit,
+    onStudyClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
@@ -153,6 +158,7 @@ fun TopicScaffold(
                 onGenerateFlashcardsClick = onGenerateFlashcardsClick,
                 onReviewClick = onReviewClick,
                 onMindMapClick = onMindMapClick,
+                onStudyClick = onStudyClick,
                 onDeleteClick = onDeleteClick,
                 onConfirmDelete = onConfirmDelete,
                 onDismissDelete = onDismissDelete,

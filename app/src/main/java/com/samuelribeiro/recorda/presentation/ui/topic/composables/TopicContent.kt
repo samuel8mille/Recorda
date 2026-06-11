@@ -1,5 +1,6 @@
 package com.samuelribeiro.recorda.presentation.ui.topic.composables
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,8 +9,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
@@ -44,6 +47,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
 import com.samuelribeiro.recorda.R
 import com.samuelribeiro.recorda.domain.model.Topic
 import com.samuelribeiro.recorda.ui.theme.HorizontalPadding
@@ -59,6 +63,7 @@ const val TOPIC_INPUT_TEST_TAG = "TopicInput"
 const val REVIEW_BUTTON_TEST_TAG = "ReviewButtonTestTag"
 const val MIND_MAP_BUTTON_TEST_TAG = "MindMapButtonTestTag"
 const val DELETE_BUTTON_TEST_TAG = "DeleteButtonTestTag"
+const val TOPIC_STUDY_AREA_TEST_TAG = "TopicStudyAreaTestTag"
 
 @Composable
 fun TopicContent(
@@ -66,6 +71,7 @@ fun TopicContent(
     onGenerateFlashcardsClick: (String) -> Unit,
     onReviewClick: (String) -> Unit,
     onMindMapClick: (String) -> Unit,
+    onStudyClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
@@ -129,6 +135,7 @@ fun TopicContent(
                         item = item,
                         onReviewClick = onReviewClick,
                         onMindMapClick = onMindMapClick,
+                        onStudyClick = onStudyClick,
                         onDeleteClick = onDeleteClick,
                     )
                 }
@@ -219,6 +226,7 @@ fun TopicContentListItem(
     item: Topic,
     onReviewClick: (String) -> Unit,
     onMindMapClick: (String) -> Unit,
+    onStudyClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
 ) {
     ElevatedCard(
@@ -235,6 +243,12 @@ fun TopicContentListItem(
             Text(
                 modifier = Modifier
                     .weight(1f)
+                    .testTag(TOPIC_STUDY_AREA_TEST_TAG)
+                    .clickable(onClickLabel = stringResource(R.string.study_open_description)) {
+                        onStudyClick(item.id)
+                    }
+                    .heightIn(min = 48.dp)
+                    .wrapContentHeight()
                     .semantics(mergeDescendants = true) {},
                 text = item.name,
                 style = MaterialTheme.typography.titleMedium,

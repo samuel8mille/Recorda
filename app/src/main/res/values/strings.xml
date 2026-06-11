@@ -10,6 +10,10 @@
          de recursos do módulo base pelo bundletool ao empacotar o app bundle. -->
     <string name="title_mind_map" translatable="false">Mapa mental</string>
 
+    <!-- Título do módulo dinâmico :feature:study, exigido na tabela
+         de recursos do módulo base pelo bundletool ao empacotar o app bundle. -->
+    <string name="title_study" translatable="false">Estudo por tema</string>
+
     <string name="state_loading">Gerando seus flashcards…</string>
 
     <string name="topic_input_hint">Sobre o que você quer estudar?</string>
@@ -57,4 +61,16 @@
     <string name="mind_map_error_generation">Não foi possível gerar o mapa mental. Tente novamente.</string>
     <string name="mind_map_expand_description">Expandir</string>
     <string name="mind_map_collapse_description">Recolher</string>
+
+    <string name="study_screen_title">Guia de estudo</string>
+    <string name="study_state_loading">Gerando guia de estudo…</string>
+    <string name="study_error_generation">Não foi possível gerar o guia de estudo. Tente novamente.</string>
+    <string name="study_open_description">Abrir guia de estudo</string>
+    <string name="study_section_open_description">Abrir detalhes do tópico</string>
+    <string name="study_back_description">Voltar</string>
+    <string name="study_close_detail_description">Voltar para a lista de tópicos</string>
+    <string name="study_key_points_title">Pontos-chave</string>
+    <string name="study_analogy_title">Analogia</string>
+    <string name="study_example_title">Exemplo</string>
+    <string name="study_mnemonic_title">Mnemônico</string>
 </resources>

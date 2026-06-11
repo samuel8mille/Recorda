@@ -20,4 +20,5 @@ data class TopicEntity(
     val flashcardsJson: String,
     val status: TopicStatus = TopicStatus.DONE,
     val mindMapJson: String? = null,
+    val studyGuideJson: String? = null,
 )

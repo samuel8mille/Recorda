@@ -43,6 +43,7 @@ android {
     // Dynamic features — módulos adicionados sob demanda:
     dynamicFeatures.add(":feature:review_session")
     dynamicFeatures.add(":feature:mind_map")
+    dynamicFeatures.add(":feature:study")
     compileSdk = 37
 
     defaultConfig {
