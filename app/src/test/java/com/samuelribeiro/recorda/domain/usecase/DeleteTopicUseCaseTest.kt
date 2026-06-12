@@ -1,6 +1,7 @@
 package com.samuelribeiro.recorda.domain.usecase
 
 import com.samuelribeiro.recorda.domain.repository.ReviewRepository
+import com.samuelribeiro.recorda.domain.repository.StatsRepository
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -13,10 +14,11 @@ class DeleteTopicUseCaseTest {
 
     private val topicRepository: TopicRepository = mockk()
     private val reviewRepository: ReviewRepository = mockk()
-    private val useCase = DeleteTopicUseCase(topicRepository, reviewRepository)
+    private val statsRepository: StatsRepository = mockk(relaxed = true)
+    private val useCase = DeleteTopicUseCase(topicRepository, reviewRepository, statsRepository)
 
     @Test
-    fun `invoke deletes review states before topic`() = runTest {
+    fun `invoke deletes review states and log before topic`() = runTest {
         coEvery { reviewRepository.deleteReviewStates(any()) } returns Unit
         coEvery { topicRepository.deleteTopic(any()) } returns Unit
 
@@ -24,6 +26,7 @@ class DeleteTopicUseCaseTest {
 
         coVerifyOrder {
             reviewRepository.deleteReviewStates("topic1")
+            statsRepository.deleteReviewLog("topic1")
             topicRepository.deleteTopic("topic1")
         }
     }

@@ -13,12 +13,14 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
@@ -47,6 +49,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.samuelribeiro.recorda.R
 import com.samuelribeiro.recorda.domain.model.Topic
@@ -64,6 +67,7 @@ const val REVIEW_BUTTON_TEST_TAG = "ReviewButtonTestTag"
 const val MIND_MAP_BUTTON_TEST_TAG = "MindMapButtonTestTag"
 const val DELETE_BUTTON_TEST_TAG = "DeleteButtonTestTag"
 const val TOPIC_STUDY_AREA_TEST_TAG = "TopicStudyAreaTestTag"
+const val STATS_BUTTON_TEST_TAG = "StatsButtonTestTag"
 
 @Composable
 fun TopicContent(
@@ -72,6 +76,7 @@ fun TopicContent(
     onReviewClick: (String) -> Unit,
     onMindMapClick: (String) -> Unit,
     onStudyClick: (String) -> Unit,
+    onStatsClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
@@ -136,6 +141,7 @@ fun TopicContent(
                         onReviewClick = onReviewClick,
                         onMindMapClick = onMindMapClick,
                         onStudyClick = onStudyClick,
+                        onStatsClick = onStatsClick,
                         onDeleteClick = onDeleteClick,
                     )
                 }
@@ -227,6 +233,7 @@ fun TopicContentListItem(
     onReviewClick: (String) -> Unit,
     onMindMapClick: (String) -> Unit,
     onStudyClick: (String) -> Unit,
+    onStatsClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
 ) {
     ElevatedCard(
@@ -253,6 +260,16 @@ fun TopicContentListItem(
                 text = item.name,
                 style = MaterialTheme.typography.titleMedium,
             )
+            IconButton(
+                modifier = Modifier.testTag(STATS_BUTTON_TEST_TAG),
+                onClick = { onStatsClick(item.id) },
+            ) {
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    contentDescription = stringResource(R.string.topic_stats_button_description),
+                    tint = MaterialTheme.colorScheme.secondary,
+                )
+            }
             IconButton(
                 modifier = Modifier.testTag(DELETE_BUTTON_TEST_TAG),
                 onClick = { onDeleteClick(item.id) },
@@ -297,7 +314,8 @@ fun EmptyTopicListMessage() {
         Text(
             text = stringResource(R.string.topic_list_empty_message),
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
         )
     }
 }

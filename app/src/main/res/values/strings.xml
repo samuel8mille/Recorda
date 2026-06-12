@@ -14,6 +14,10 @@
          de recursos do módulo base pelo bundletool ao empacotar o app bundle. -->
     <string name="title_study" translatable="false">Estudo por tema</string>
 
+    <!-- Título do módulo dinâmico :feature:stats, exigido na tabela
+         de recursos do módulo base pelo bundletool ao empacotar o app bundle. -->
+    <string name="title_stats" translatable="false">Estatísticas</string>
+
     <string name="state_loading">Gerando seus flashcards…</string>
 
     <string name="topic_input_hint">Sobre o que você quer estudar?</string>
@@ -73,4 +77,23 @@
     <string name="study_analogy_title">Analogia</string>
     <string name="study_example_title">Exemplo</string>
     <string name="study_mnemonic_title">Mnemônico</string>
+
+    <string name="stats_screen_title">Estatísticas</string>
+    <string name="stats_state_loading">Calculando estatísticas…</string>
+    <string name="stats_error_loading">Não foi possível carregar as estatísticas. Tente novamente.</string>
+    <string name="stats_retry_button">Tentar novamente</string>
+    <string name="stats_back_description">Voltar</string>
+    <string name="topic_stats_button_description">Ver estatísticas de retenção</string>
+    <string name="stats_total_cards">Total de cards</string>
+    <string name="stats_cards_on_track">Cards em dia</string>
+    <string name="stats_cards_due">Cards a revisar</string>
+    <string name="stats_cards_never_reviewed">Nunca revisados</string>
+    <string name="stats_success_rate">Taxa de acerto</string>
+    <string name="stats_streak_days">Sequência de dias</string>
+    <string name="stats_streak_value">%1$d dia(s)</string>
+    <string name="stats_percent_value">%1$d%%</string>
+    <string name="stats_average_ease">Facilidade média</string>
+    <string name="stats_chart_title">Revisões nos últimos 7 dias</string>
+    <string name="stats_bar_description">%1$s: %2$d revisões</string>
+    <string name="stats_empty_value">—</string>
 </resources>

@@ -4,6 +4,7 @@ import com.samuelribeiro.recorda.domain.model.CardRating
 import com.samuelribeiro.recorda.domain.model.FlashcardReviewState
 import com.samuelribeiro.recorda.domain.model.ReviewResult
 import com.samuelribeiro.recorda.domain.repository.ReviewRepository
+import com.samuelribeiro.recorda.domain.repository.StatsRepository
 import com.samuelribeiro.recorda.domain.scheduler.ReviewScheduler
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -18,7 +19,8 @@ class UpdateCardScheduleUseCaseTest {
 
     private val scheduler: ReviewScheduler = mockk()
     private val repository: ReviewRepository = mockk()
-    private val useCase = UpdateCardScheduleUseCase(scheduler, repository)
+    private val statsRepository: StatsRepository = mockk(relaxed = true)
+    private val useCase = UpdateCardScheduleUseCase(scheduler, repository, statsRepository)
 
     private val initialState = FlashcardReviewState(
         cardIndex = 2,
@@ -84,5 +86,24 @@ class UpdateCardScheduleUseCaseTest {
         val expectedMin = before + 3 * 86_400_000L
         val expectedMax = after + 3 * 86_400_000L
         assert(result.nextReviewAtMillis in expectedMin..expectedMax)
+    }
+
+    @Test
+    fun `invoke logs review event with card index and rating`() = runTest {
+        every { scheduler.schedule(any(), any(), any(), any()) } returns ReviewResult(2.5f, 1, 1)
+        coEvery { repository.saveReviewState(any(), any()) } returns Unit
+
+        val before = System.currentTimeMillis()
+        useCase("topic1", initialState, CardRating.EASY)
+        val after = System.currentTimeMillis()
+
+        coVerify {
+            statsRepository.logReview(
+                topicId = "topic1",
+                entry = match {
+                    it.cardIndex == 2 && it.rating == CardRating.EASY && it.timestampMillis in before..after
+                },
+            )
+        }
     }
 }

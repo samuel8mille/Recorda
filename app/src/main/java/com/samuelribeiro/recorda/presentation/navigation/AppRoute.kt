@@ -5,6 +5,7 @@ object AppRoute {
     const val REVIEW = "review/{topicId}"
     const val MIND_MAP = "mind_map/{topicId}"
     const val STUDY = "study/{topicId}"
+    const val STATS = "stats/{topicId}"
 
     /** Builds the navigation route for the review session of [topicId]. */
     fun review(topicId: String) = "review/$topicId"
@@ -14,4 +15,7 @@ object AppRoute {
 
     /** Builds the navigation route for the study guide of [topicId]. */
     fun study(topicId: String) = "study/$topicId"
+
+    /** Builds the navigation route for the retention statistics of [topicId]. */
+    fun stats(topicId: String) = "stats/$topicId"
 }

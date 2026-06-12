@@ -45,6 +45,7 @@ fun TopicScreen(
     onNavigateToReview: (String) -> Unit,
     onNavigateToMindMap: (String) -> Unit,
     onNavigateToStudy: (String) -> Unit,
+    onNavigateToStats: (String) -> Unit,
 ) {
     val uiState by viewModel.stateFlow.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -73,6 +74,7 @@ fun TopicScreen(
         onReviewClick = onNavigateToReview,
         onMindMapClick = onNavigateToMindMap,
         onStudyClick = onNavigateToStudy,
+        onStatsClick = onNavigateToStats,
         onDeleteClick = { topicId -> viewModel.onSendEvent(RequestDeleteTopic(topicId)) },
         onConfirmDelete = { viewModel.onSendEvent(ConfirmDeleteTopic) },
         onDismissDelete = { viewModel.onSendEvent(DismissDeleteDialog) },
@@ -87,6 +89,7 @@ fun TopicScreen(
     onReviewClick: (String) -> Unit,
     onMindMapClick: (String) -> Unit,
     onStudyClick: (String) -> Unit,
+    onStatsClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
@@ -99,6 +102,7 @@ fun TopicScreen(
             onReviewClick = onReviewClick,
             onMindMapClick = onMindMapClick,
             onStudyClick = onStudyClick,
+            onStatsClick = onStatsClick,
             onDeleteClick = onDeleteClick,
             onConfirmDelete = onConfirmDelete,
             onDismissDelete = onDismissDelete,
@@ -115,6 +119,7 @@ fun TopicScaffold(
     onReviewClick: (String) -> Unit,
     onMindMapClick: (String) -> Unit,
     onStudyClick: (String) -> Unit,
+    onStatsClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
@@ -159,6 +164,7 @@ fun TopicScaffold(
                 onReviewClick = onReviewClick,
                 onMindMapClick = onMindMapClick,
                 onStudyClick = onStudyClick,
+                onStatsClick = onStatsClick,
                 onDeleteClick = onDeleteClick,
                 onConfirmDelete = onConfirmDelete,
                 onDismissDelete = onDismissDelete,

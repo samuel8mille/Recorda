@@ -3,9 +3,11 @@ package com.samuelribeiro.recorda.di
 import com.samuelribeiro.recorda.domain.repository.MindMapRepository
 import com.samuelribeiro.recorda.domain.repository.OralTestRepository
 import com.samuelribeiro.recorda.domain.repository.ReviewRepository
+import com.samuelribeiro.recorda.domain.repository.StatsRepository
 import com.samuelribeiro.recorda.domain.repository.StudyGuideRepository
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
 import com.samuelribeiro.recorda.domain.scheduler.ReviewScheduler
+import com.samuelribeiro.recorda.domain.stats.TopicStatsCalculator
 import com.samuelribeiro.recorda.domain.usecase.DeleteTopicUseCase
 import com.samuelribeiro.recorda.domain.usecase.EvaluateOralAnswerUseCase
 import com.samuelribeiro.recorda.domain.usecase.GenerateFlashcardsUseCase
@@ -13,12 +15,15 @@ import com.samuelribeiro.recorda.domain.usecase.GenerateMindMapUseCase
 import com.samuelribeiro.recorda.domain.usecase.GenerateStudyGuideUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetFlashcardReviewsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetStoredTopicsUseCase
+import com.samuelribeiro.recorda.domain.usecase.GetTopicStatsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetTopicUseCase
 import com.samuelribeiro.recorda.domain.usecase.UpdateCardScheduleUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import java.time.Clock
+import javax.inject.Singleton
 
 /** Hilt module providing domain-layer dependencies. */
 @Module
@@ -30,7 +35,8 @@ object DomainModule {
     fun provideDeleteTopicUseCase(
         topicRepository: TopicRepository,
         reviewRepository: ReviewRepository,
-    ): DeleteTopicUseCase = DeleteTopicUseCase(topicRepository, reviewRepository)
+        statsRepository: StatsRepository,
+    ): DeleteTopicUseCase = DeleteTopicUseCase(topicRepository, reviewRepository, statsRepository)
 
     @Provides
     fun provideGenerateFlashcardsUseCase(
@@ -58,7 +64,8 @@ object DomainModule {
     fun provideUpdateCardScheduleUseCase(
         scheduler: ReviewScheduler,
         repository: ReviewRepository,
-    ): UpdateCardScheduleUseCase = UpdateCardScheduleUseCase(scheduler, repository)
+        statsRepository: StatsRepository,
+    ): UpdateCardScheduleUseCase = UpdateCardScheduleUseCase(scheduler, repository, statsRepository)
 
     /** Provides [EvaluateOralAnswerUseCase]. */
     @Provides
@@ -77,4 +84,24 @@ object DomainModule {
     fun provideGenerateStudyGuideUseCase(
         repository: StudyGuideRepository
     ): GenerateStudyGuideUseCase = GenerateStudyGuideUseCase(repository)
+
+    /** Provides the system [Clock] used for day-based statistics. */
+    @Provides
+    @Singleton
+    fun provideClock(): Clock = Clock.systemDefaultZone()
+
+    /** Provides [TopicStatsCalculator]. */
+    @Provides
+    fun provideTopicStatsCalculator(clock: Clock): TopicStatsCalculator =
+        TopicStatsCalculator(clock)
+
+    /** Provides [GetTopicStatsUseCase]. */
+    @Provides
+    fun provideGetTopicStatsUseCase(
+        topicRepository: TopicRepository,
+        reviewRepository: ReviewRepository,
+        statsRepository: StatsRepository,
+        calculator: TopicStatsCalculator,
+    ): GetTopicStatsUseCase =
+        GetTopicStatsUseCase(topicRepository, reviewRepository, statsRepository, calculator)
 }

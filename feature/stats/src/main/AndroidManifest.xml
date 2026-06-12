@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:dist="http://schemas.android.com/apk/distribution">
+
+    <!--
+    Módulo dinâmico das estatísticas de retenção, com entrega install-time (sempre
+    instalado junto com o APK base), seguindo o mesmo padrão de :feature:review_session.
+    -->
+    <dist:module
+        dist:instant="false"
+        dist:title="@string/title_stats">
+        <dist:delivery>
+            <dist:install-time />
+        </dist:delivery>
+        <dist:fusing dist:include="true" />
+    </dist:module>
+
+    <application>
+        <!--
+        Registers StatsScreen into StatsSessionEntry before Application.onCreate().
+        This lets :app navigate to StatsScreen without importing it directly,
+        preserving the dynamic-feature dependency direction.
+        -->
+        <provider
+            android:name=".StatsSessionInitProvider"
+            android:authorities="${applicationId}.stats_init"
+            android:exported="false" />
+    </application>
+
+</manifest>
