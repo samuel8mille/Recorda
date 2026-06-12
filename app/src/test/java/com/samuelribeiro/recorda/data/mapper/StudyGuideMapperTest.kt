@@ -13,7 +13,8 @@ class StudyGuideMapperTest {
 
     private val validJson = """
         {"sections":[
-          {"title":"Sintaxe","emoji":"📝","summary":"Resumo da sintaxe.","keyPoints":["Ponto 1","Ponto 2"],
+          {"title":"Sintaxe","emoji":"📝","definition":"Definição da sintaxe.","content":"Conteúdo completo.",
+           "summary":"Resumo da sintaxe.","keyPoints":["Ponto 1","Ponto 2"],
            "analogy":"Como uma receita.","example":"val x = 1","mnemonic":"S de simples"},
           {"title":"Coroutines","emoji":"🧵","summary":"Concorrência leve.","keyPoints":["Suspend"]}
         ]}
@@ -28,6 +29,8 @@ class StudyGuideMapperTest {
         assertEquals("1", guide.sections[1].id)
         assertEquals("Sintaxe", guide.sections[0].title)
         assertEquals("📝", guide.sections[0].emoji)
+        assertEquals("Definição da sintaxe.", guide.sections[0].definition)
+        assertEquals("Conteúdo completo.", guide.sections[0].content)
         assertEquals(listOf("Ponto 1", "Ponto 2"), guide.sections[0].keyPoints)
         assertEquals("Como uma receita.", guide.sections[0].analogy)
         assertEquals("val x = 1", guide.sections[0].example)
@@ -35,7 +38,7 @@ class StudyGuideMapperTest {
     }
 
     @Test
-    fun `optional fields absent become null`() {
+    fun `optional fields absent become null and required texts become empty`() {
         val guide = mapper.toStudyGuide(validJson)
 
         val second = guide.sections[1]
@@ -43,6 +46,8 @@ class StudyGuideMapperTest {
         assertNull(second.example)
         assertNull(second.mnemonic)
         assertNull(second.imageUrl)
+        assertEquals("", second.definition)
+        assertEquals("", second.content)
     }
 
     @Test

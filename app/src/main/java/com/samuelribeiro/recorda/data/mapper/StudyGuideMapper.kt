@@ -50,6 +50,8 @@ class StudyGuideMapper @Inject constructor(
         id = index.toString(),
         title = title.orEmpty().trim(),
         emoji = emoji?.trim().orEmpty(),
+        definition = definition?.trim().orEmpty(),
+        content = content?.trim().orEmpty(),
         summary = summary?.trim().orEmpty(),
         keyPoints = keyPoints.orEmpty().filter { it.isNotBlank() }.map { it.trim() },
         analogy = analogy?.trim()?.takeIf { it.isNotBlank() },
@@ -62,6 +64,8 @@ class StudyGuideMapper @Inject constructor(
     private data class RawSection(
         val title: String?,
         val emoji: String?,
+        val definition: String?,
+        val content: String?,
         val summary: String?,
         val keyPoints: List<String>?,
         val analogy: String?,

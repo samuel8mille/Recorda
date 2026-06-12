@@ -107,6 +107,8 @@ class TopicEntityMapperTest {
                     id = "0",
                     title = "Sintaxe",
                     emoji = "📝",
+                    definition = "Definição",
+                    content = "Conteúdo completo",
                     summary = "Resumo",
                     keyPoints = listOf("Ponto 1"),
                     analogy = "Como uma receita",

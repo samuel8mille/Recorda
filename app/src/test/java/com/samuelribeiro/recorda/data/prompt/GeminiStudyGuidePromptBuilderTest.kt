@@ -20,13 +20,15 @@ class GeminiStudyGuidePromptBuilderTest {
 
         assertContains(prompt, "APENAS com JSON válido")
         assertContains(prompt, "\"sections\"")
+        assertContains(prompt, "\"definition\"")
+        assertContains(prompt, "\"content\"")
         assertContains(prompt, "\"keyPoints\"")
     }
 
     @Test
-    fun `prompt bounds the number of sections`() {
+    fun `prompt asks for a single section`() {
         val prompt = builder.build("Kotlin")
 
-        assertContains(prompt, "3 a 5 sections")
+        assertContains(prompt, "Gere 1 section")
     }
 }

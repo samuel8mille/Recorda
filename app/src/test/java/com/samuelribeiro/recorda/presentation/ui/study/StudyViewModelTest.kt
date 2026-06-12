@@ -38,8 +38,24 @@ class StudyViewModelTest {
 
     private val guide = StudyGuide(
         sections = listOf(
-            StudySection(id = "0", title = "Sintaxe", emoji = "📝", summary = "s", keyPoints = listOf("k")),
-            StudySection(id = "1", title = "Coroutines", emoji = "🧵", summary = "c", keyPoints = listOf("k2")),
+            StudySection(
+                id = "0",
+                title = "Sintaxe",
+                emoji = "📝",
+                definition = "d",
+                content = "c",
+                summary = "s",
+                keyPoints = listOf("k"),
+            ),
+            StudySection(
+                id = "1",
+                title = "Coroutines",
+                emoji = "🧵",
+                definition = "d2",
+                content = "c2",
+                summary = "s2",
+                keyPoints = listOf("k2"),
+            ),
         ),
     )
 

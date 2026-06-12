@@ -44,6 +44,10 @@ internal fun StudySectionDetail(section: StudySection) {
         Text(text = section.title, style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(SpaceMedium))
         Text(text = section.summary, style = MaterialTheme.typography.bodyLarge)
+        Spacer(Modifier.height(SpaceMedium))
+        Text(text = section.definition, style = MaterialTheme.typography.bodyLarge)
+        Spacer(Modifier.height(SpaceMedium))
+        Text(text = section.content, style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(SpaceLarge))
         KeyPointsList(keyPoints = section.keyPoints)
         section.analogy?.let {

@@ -15,15 +15,17 @@ class GeminiStudyGuidePromptBuilder @Inject constructor() : StudyGuidePromptBuil
         "Crie um guia de estudo sobre \"$topicName\" em português do Brasil. " +
             "Responda APENAS com JSON válido, sem cercas de markdown, sem comentários e sem texto " +
             "antes ou depois, exatamente neste formato: " +
-            "{\"sections\":[{\"title\":\"...\",\"emoji\":\"...\",\"summary\":\"...\"," +
-            "\"keyPoints\":[\"...\"],\"analogy\":\"...\",\"example\":\"...\",\"mnemonic\":\"...\"}]}\n" +
+            "{\"sections\":[{\"title\":\"...\",\"emoji\":\"...\",\"definition\":\"...\",\"content\"" +
+            ":\"...\",\"summary\":\"...\",\"keyPoints\":[\"...\"],\"analogy\":\"...\",\"example\":\"...\",\"mnemonic\":\"...\"}]}\n" +
             "Regras:\n" +
-            "- Gere de 3 a 5 sections cobrindo os principais tópicos do assunto.\n" +
+            "- Gere 1 section com os seguintes elementos sobre o tópico.\n" +
             "- title: nome do tópico em até 6 palavras, preferindo o nome canônico do conceito " +
             "(será usado como termo de busca de imagem na Wikipédia).\n" +
             "- emoji: exatamente 1 emoji que represente o tópico.\n" +
+            "- definition: definição do tópico de aproximadamente 2 frases.\n" +
+            "- content: conteúdo completo sobre o tópico, cobrindo os principais keyPoints.\n" +
             "- summary: resumo de aproximadamente 2 frases.\n" +
-            "- keyPoints: lista com 3 a 5 pontos-chave, uma frase curta cada.\n" +
+            "- keyPoints: lista com principais pontos-chave, com explicação completa.\n" +
             "- analogy: uma analogia simples do dia a dia.\n" +
             "- example: um exemplo concreto.\n" +
             "- mnemonic: uma regra mnemônica curta para memorização."

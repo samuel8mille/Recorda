@@ -15,6 +15,8 @@ data class StudyGuide(
  * @property id Stable index-based identifier (e.g. "0", "1") used for selection state.
  * @property title The sub-topic's name.
  * @property emoji Single emoji representing the sub-topic, used as a visual anchor.
+ * @property definition Short definition of the sub-topic (around two sentences).
+ * @property content Full learning content covering the key points in depth.
  * @property summary Short overview of the sub-topic (around two sentences).
  * @property keyPoints Concise bullet points covering the essential facts.
  * @property analogy Everyday analogy that grounds the concept, or `null` when absent.
@@ -26,6 +28,8 @@ data class StudySection(
     val id: String,
     val title: String,
     val emoji: String,
+    val definition: String,
+    val content: String,
     val summary: String,
     val keyPoints: List<String>,
     val analogy: String? = null,

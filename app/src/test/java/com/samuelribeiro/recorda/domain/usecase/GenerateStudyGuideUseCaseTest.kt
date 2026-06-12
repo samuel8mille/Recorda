@@ -21,7 +21,17 @@ class GenerateStudyGuideUseCaseTest {
     fun `delegates to repository`() = runTest {
         val topic = Topic(id = "1", name = "Kotlin", flashcards = emptyList())
         val guide = StudyGuide(
-            sections = listOf(StudySection(id = "0", title = "T", emoji = "✨", summary = "s", keyPoints = emptyList())),
+            sections = listOf(
+                StudySection(
+                    id = "0",
+                    title = "T",
+                    emoji = "✨",
+                    definition = "d",
+                    content = "c",
+                    summary = "s",
+                    keyPoints = emptyList(),
+                ),
+            ),
         )
         every { repository.generateStudyGuide(topic) } returns flowOf(Result.success(guide))
 

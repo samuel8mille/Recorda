@@ -64,7 +64,7 @@ class StudyGuideRepositoryImplTest {
     )
 
     private val guideJson =
-        """{"sections":[{"title":"Sintaxe","emoji":"📝","summary":"s","keyPoints":["k"]}]}"""
+        """{"sections":[{"title":"Sintaxe","emoji":"📝","definition":"d","content":"c","summary":"s","keyPoints":["k"]}]}"""
 
     @Test
     fun `success enriches sections with image url and caches json`() = runTest {

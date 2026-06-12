@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.work.Configuration
 import androidx.work.WorkManager
+import com.samuelribeiro.recorda.data.source.local.AppDatabase
 import com.samuelribeiro.recorda.presentation.ui.topic.composables.TOPIC_INPUT_TEST_TAG
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -14,6 +15,7 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
+import javax.inject.Inject
 
 @HiltAndroidTest
 class MainScreenTest {
@@ -24,9 +26,13 @@ class MainScreenTest {
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
 
+    @Inject
+    lateinit var database: AppDatabase
+
     @Before
     fun setUp() {
         hiltRule.inject()
+        database.clearAllTables()
     }
 
     companion object {

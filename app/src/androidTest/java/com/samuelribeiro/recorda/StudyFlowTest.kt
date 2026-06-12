@@ -49,16 +49,18 @@ class StudyFlowTest {
 
     private val topicName = "Programação Kotlin"
     private val sectionTitle = "Sintaxe básica"
+    private val definition = "Sintaxe é o conjunto de regras da linguagem"
+    private val content = "A sintaxe do Kotlin é concisa e expressiva"
     private val keyPoint = "Val declara valores imutáveis"
     private val analogy = "Como uma receita de bolo"
 
     private val studyGuideJson =
         """
         {"sections":[
-          {"id":"0","title":"$sectionTitle","emoji":"📝","summary":"Resumo da sintaxe.",
-           "keyPoints":["$keyPoint"],"analogy":"$analogy","imageUrl":null},
-          {"id":"1","title":"Coroutines","emoji":"🧵","summary":"Concorrência leve.",
-           "keyPoints":["Suspend functions"],"imageUrl":null}
+          {"id":"0","title":"$sectionTitle","emoji":"📝","definition":"$definition","content":"$content",
+           "summary":"Resumo da sintaxe.","keyPoints":["$keyPoint"],"analogy":"$analogy","imageUrl":null},
+          {"id":"1","title":"Coroutines","emoji":"🧵","definition":"Concorrência estruturada","content":"Conteúdo",
+           "summary":"Concorrência leve.","keyPoints":["Suspend functions"],"imageUrl":null}
         ]}
         """.trimIndent()
 
@@ -89,6 +91,8 @@ class StudyFlowTest {
 
         composeRule.onNodeWithText(sectionTitle).performClick()
 
+        composeRule.onNodeWithText(definition).assertIsDisplayed()
+        composeRule.onNodeWithText(content).assertIsDisplayed()
         composeRule.onNodeWithText(keyPoint, substring = true).assertIsDisplayed()
         composeRule.onNodeWithText(analogy).assertIsDisplayed()
     }
