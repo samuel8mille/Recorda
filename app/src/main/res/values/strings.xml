@@ -10,10 +10,6 @@
          de recursos do módulo base pelo bundletool ao empacotar o app bundle. -->
     <string name="title_mind_map" translatable="false">Mapa mental</string>
 
-    <!-- Título do módulo dinâmico :feature:study, exigido na tabela
-         de recursos do módulo base pelo bundletool ao empacotar o app bundle. -->
-    <string name="title_study" translatable="false">Estudo por tema</string>
-
     <!-- Título do módulo dinâmico :feature:stats, exigido na tabela
          de recursos do módulo base pelo bundletool ao empacotar o app bundle. -->
     <string name="title_stats" translatable="false">Estatísticas</string>
@@ -21,6 +17,10 @@
     <!-- Título do módulo dinâmico :feature:content, exigido na tabela
          de recursos do módulo base pelo bundletool ao empacotar o app bundle. -->
     <string name="title_content" translatable="false">Conteúdo</string>
+
+    <!-- Título do módulo dinâmico :feature:active_recall, exigido na tabela
+         de recursos do módulo base pelo bundletool ao empacotar o app bundle. -->
+    <string name="title_active_recall" translatable="false">Memória ativa</string>
 
     <string name="state_loading">Gerando seus flashcards…</string>
 
@@ -66,7 +66,7 @@
     <string name="topic_hub_screen_title">Tema</string>
     <string name="topic_hub_back_description">Voltar</string>
     <string name="hub_item_content">Conteúdo</string>
-    <string name="hub_item_study">Guia de estudo</string>
+    <string name="hub_item_active_recall">Memória ativa</string>
     <string name="hub_item_mind_map">Mapa mental</string>
     <string name="hub_item_review">Revisão</string>
     <string name="hub_item_stats">Estatísticas</string>
@@ -87,16 +87,16 @@
     <string name="mind_map_expand_description">Expandir</string>
     <string name="mind_map_collapse_description">Recolher</string>
 
-    <string name="study_screen_title">Guia de estudo</string>
-    <string name="study_state_loading">Gerando guia de estudo…</string>
-    <string name="study_error_generation">Não foi possível gerar o guia de estudo. Tente novamente.</string>
-    <string name="study_section_open_description">Abrir detalhes do tópico</string>
-    <string name="study_back_description">Voltar</string>
-    <string name="study_close_detail_description">Voltar para a lista de tópicos</string>
-    <string name="study_key_points_title">Pontos-chave</string>
-    <string name="study_analogy_title">Analogia</string>
-    <string name="study_example_title">Exemplo</string>
-    <string name="study_mnemonic_title">Mnemônico</string>
+    <string name="active_recall_screen_title">Memória ativa</string>
+    <string name="active_recall_state_loading">Preparando os cartões…</string>
+    <string name="active_recall_show_hint">Memorize esta definição…</string>
+    <string name="active_recall_recording">Fale o que você lembrar…</string>
+    <string name="active_recall_next_button">Próximo</string>
+    <string name="active_recall_retry_button">Tentar novamente</string>
+    <string name="active_recall_complete_title">Sessão concluída!</string>
+    <string name="active_recall_complete_button">Voltar</string>
+    <string name="active_recall_error_generation">Não foi possível preparar a sessão. Tente novamente.</string>
+    <string name="active_recall_back_description">Voltar</string>
 
     <string name="stats_screen_title">Estatísticas</string>
     <string name="stats_state_loading">Calculando estatísticas…</string>

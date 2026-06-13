@@ -5,8 +5,8 @@ import com.samuelribeiro.recorda.data.source.local.TopicEntity
 import com.samuelribeiro.recorda.domain.model.Chapter
 import com.samuelribeiro.recorda.domain.model.Flashcard
 import com.samuelribeiro.recorda.domain.model.MindMapNode
-import com.samuelribeiro.recorda.domain.model.StudyGuide
-import com.samuelribeiro.recorda.domain.model.StudySection
+import com.samuelribeiro.recorda.domain.model.MemoryCard
+import com.samuelribeiro.recorda.domain.model.MemoryDeck
 import com.samuelribeiro.recorda.domain.model.Topic
 import com.samuelribeiro.recorda.domain.model.TopicContent
 import org.junit.Test
@@ -107,37 +107,25 @@ class TopicEntityMapperTest {
     }
 
     @Test
-    fun `toDomain returns null study guide for blank json`() {
+    fun `toDomain returns null memory deck for blank json`() {
         val entity = TopicEntity(id = "1", name = "Test", flashcardsJson = "")
 
         val result = mapper.toDomain(entity)
 
-        assertNull(result.studyGuide)
+        assertNull(result.memoryDeck)
     }
 
     @Test
-    fun `round-trip preserves study guide`() {
-        val guide = StudyGuide(
-            sections = listOf(
-                StudySection(
-                    id = "0",
-                    title = "Sintaxe",
-                    emoji = "📝",
-                    definition = "Definição",
-                    content = "Conteúdo completo",
-                    summary = "Resumo",
-                    keyPoints = listOf("Ponto 1"),
-                    analogy = "Como uma receita",
-                    imageUrl = "https://img/s.jpg",
-                ),
-            ),
+    fun `round-trip preserves memory deck`() {
+        val deck = MemoryDeck(
+            cards = listOf(MemoryCard(id = "0", concept = "Célula", definition = "Unidade da vida")),
         )
-        val topicWithGuide = topic.copy(studyGuide = guide)
+        val topicWithDeck = topic.copy(memoryDeck = deck)
 
-        val entity = mapper.toEntity(topicWithGuide)
+        val entity = mapper.toEntity(topicWithDeck)
         val restored = mapper.toDomain(entity)
 
-        assertEquals(topicWithGuide, restored)
-        assertEquals(guide, restored.studyGuide)
+        assertEquals(topicWithDeck, restored)
+        assertEquals(deck, restored.memoryDeck)
     }
 }

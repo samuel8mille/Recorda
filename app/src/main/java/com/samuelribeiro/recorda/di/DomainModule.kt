@@ -4,7 +4,6 @@ import com.samuelribeiro.recorda.domain.repository.MindMapRepository
 import com.samuelribeiro.recorda.domain.repository.OralTestRepository
 import com.samuelribeiro.recorda.domain.repository.ReviewRepository
 import com.samuelribeiro.recorda.domain.repository.StatsRepository
-import com.samuelribeiro.recorda.domain.repository.StudyGuideRepository
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
 import com.samuelribeiro.recorda.domain.scheduler.ReviewScheduler
 import com.samuelribeiro.recorda.domain.stats.TopicStatsCalculator
@@ -13,7 +12,6 @@ import com.samuelribeiro.recorda.domain.usecase.DeleteTopicUseCase
 import com.samuelribeiro.recorda.domain.usecase.EvaluateOralAnswerUseCase
 import com.samuelribeiro.recorda.domain.usecase.GenerateFlashcardsFromContentUseCase
 import com.samuelribeiro.recorda.domain.usecase.GenerateMindMapUseCase
-import com.samuelribeiro.recorda.domain.usecase.GenerateStudyGuideUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetFlashcardReviewsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetStoredTopicsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetTopicStatsUseCase
@@ -86,12 +84,6 @@ object DomainModule {
     fun provideGenerateMindMapUseCase(
         repository: MindMapRepository
     ): GenerateMindMapUseCase = GenerateMindMapUseCase(repository)
-
-    /** Provides [GenerateStudyGuideUseCase]. */
-    @Provides
-    fun provideGenerateStudyGuideUseCase(
-        repository: StudyGuideRepository
-    ): GenerateStudyGuideUseCase = GenerateStudyGuideUseCase(repository)
 
     /** Provides the system [Clock] used for day-based statistics. */
     @Provides

@@ -95,14 +95,14 @@ class TopicDaoTest {
     }
 
     @Test
-    fun updateStudyGuide_updates_studyGuideJson() = runBlocking {
+    fun updateMemoryCards_updates_memoryCardsJson() = runBlocking {
         dao.insert(TopicEntity(id = "t1", name = "Kotlin", flashcardsJson = "[]"))
-        val json = """{"sections":[{"id":"0","title":"Sintaxe","emoji":"x","summary":"s","keyPoints":[]}]}"""
-        dao.updateStudyGuide("t1", json)
+        val json = """{"cards":[{"id":"0","concept":"Célula","definition":"Unidade da vida"}]}"""
+        dao.updateMemoryCards("t1", json)
 
         val result = dao.getById("t1").first()
 
-        assertEquals(json, result?.studyGuideJson)
+        assertEquals(json, result?.memoryCardsJson)
     }
 
     @Test

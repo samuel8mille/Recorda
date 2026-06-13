@@ -14,9 +14,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -45,7 +45,7 @@ import com.samuelribeiro.recorda.ui.theme.SpaceMedium
 import com.samuelribeiro.recorda.ui.theme.SpaceSmall
 
 const val HUB_CONTENT_TEST_TAG = "HubContentTestTag"
-const val HUB_STUDY_TEST_TAG = "HubStudyTestTag"
+const val HUB_ACTIVE_RECALL_TEST_TAG = "HubActiveRecallTestTag"
 const val HUB_MIND_MAP_TEST_TAG = "HubMindMapTestTag"
 const val HUB_REVIEW_TEST_TAG = "HubReviewTestTag"
 const val HUB_STATS_TEST_TAG = "HubStatsTestTag"
@@ -66,7 +66,7 @@ private data class HubItem(
 fun TopicHubScreen(
     viewModel: TopicHubViewModel,
     onNavigateToContent: () -> Unit,
-    onNavigateToStudy: () -> Unit,
+    onNavigateToActiveRecall: () -> Unit,
     onNavigateToMindMap: () -> Unit,
     onNavigateToReview: () -> Unit,
     onNavigateToStats: () -> Unit,
@@ -75,7 +75,7 @@ fun TopicHubScreen(
     val uiState by viewModel.stateFlow.collectAsStateWithLifecycle()
     val items = listOf(
         HubItem(HUB_CONTENT_TEST_TAG, R.string.hub_item_content, Icons.AutoMirrored.Filled.List, onNavigateToContent),
-        HubItem(HUB_STUDY_TEST_TAG, R.string.hub_item_study, Icons.Filled.Star, onNavigateToStudy),
+        HubItem(HUB_ACTIVE_RECALL_TEST_TAG, R.string.hub_item_active_recall, Icons.Filled.Lock, onNavigateToActiveRecall),
         HubItem(HUB_MIND_MAP_TEST_TAG, R.string.hub_item_mind_map, Icons.Filled.Share, onNavigateToMindMap),
         HubItem(HUB_REVIEW_TEST_TAG, R.string.hub_item_review, Icons.Filled.Refresh, onNavigateToReview),
         HubItem(HUB_STATS_TEST_TAG, R.string.hub_item_stats, Icons.Filled.DateRange, onNavigateToStats),

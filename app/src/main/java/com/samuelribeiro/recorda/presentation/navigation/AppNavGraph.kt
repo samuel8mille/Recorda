@@ -6,11 +6,11 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.samuelribeiro.recorda.presentation.ui.activerecall.ActiveRecallViewModel
 import com.samuelribeiro.recorda.presentation.ui.content.ContentViewModel
 import com.samuelribeiro.recorda.presentation.ui.mindmap.MindMapViewModel
 import com.samuelribeiro.recorda.presentation.ui.review.ReviewViewModel
 import com.samuelribeiro.recorda.presentation.ui.stats.StatsViewModel
-import com.samuelribeiro.recorda.presentation.ui.study.StudyViewModel
 import com.samuelribeiro.recorda.presentation.ui.topic.TopicUiState
 import com.samuelribeiro.recorda.presentation.ui.topic.TopicViewModel
 import com.samuelribeiro.recorda.presentation.ui.topic.composables.TopicScreen
@@ -41,7 +41,7 @@ fun AppNavGraph(navController: NavHostController) {
             TopicHubScreen(
                 viewModel = viewModel,
                 onNavigateToContent = { navController.navigate(AppRoute.content(topicId)) },
-                onNavigateToStudy = { navController.navigate(AppRoute.study(topicId)) },
+                onNavigateToActiveRecall = { navController.navigate(AppRoute.activeRecall(topicId)) },
                 onNavigateToMindMap = { navController.navigate(AppRoute.mindMap(topicId)) },
                 onNavigateToReview = { navController.navigate(AppRoute.review(topicId)) },
                 onNavigateToStats = { navController.navigate(AppRoute.stats(topicId)) },
@@ -79,14 +79,14 @@ fun AppNavGraph(navController: NavHostController) {
             MindMapSessionEntry.content(viewModel) { navController.popBackStack() }
         }
         composable(
-            route = AppRoute.STUDY,
+            route = AppRoute.ACTIVE_RECALL,
             arguments = listOf(navArgument("topicId") { type = NavType.StringType }),
         ) { backStackEntry ->
             val topicId = checkNotNull(backStackEntry.arguments?.getString("topicId"))
-            val viewModel = getViewModel<StudyViewModel, StudyViewModel.ViewModelFactory> { factory ->
+            val viewModel = getViewModel<ActiveRecallViewModel, ActiveRecallViewModel.ViewModelFactory> { factory ->
                 factory.create(topicId)
             }
-            StudySessionEntry.content(viewModel) { navController.popBackStack() }
+            ActiveRecallSessionEntry.content(viewModel) { navController.popBackStack() }
         }
         composable(
             route = AppRoute.STATS,

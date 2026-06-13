@@ -18,7 +18,7 @@ import com.samuelribeiro.recorda.presentation.ui.topichub.composables.HUB_CONTEN
 import com.samuelribeiro.recorda.presentation.ui.topichub.composables.HUB_MIND_MAP_TEST_TAG
 import com.samuelribeiro.recorda.presentation.ui.topichub.composables.HUB_REVIEW_TEST_TAG
 import com.samuelribeiro.recorda.presentation.ui.topichub.composables.HUB_STATS_TEST_TAG
-import com.samuelribeiro.recorda.presentation.ui.topichub.composables.HUB_STUDY_TEST_TAG
+import com.samuelribeiro.recorda.presentation.ui.topichub.composables.HUB_ACTIVE_RECALL_TEST_TAG
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking
@@ -67,7 +67,7 @@ class TopicHubFlowTest {
         openHub()
 
         composeRule.onNodeWithTag(HUB_CONTENT_TEST_TAG).assertIsDisplayed()
-        composeRule.onNodeWithTag(HUB_STUDY_TEST_TAG).assertIsDisplayed()
+        composeRule.onNodeWithTag(HUB_ACTIVE_RECALL_TEST_TAG).assertIsDisplayed()
         composeRule.onNodeWithTag(HUB_MIND_MAP_TEST_TAG).assertIsDisplayed()
         composeRule.onNodeWithTag(HUB_REVIEW_TEST_TAG).assertIsDisplayed()
         composeRule.onNodeWithTag(HUB_STATS_TEST_TAG).assertIsDisplayed()

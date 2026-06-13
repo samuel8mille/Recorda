@@ -4,28 +4,28 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.samuelribeiro.recorda.data.source.local.TopicEntity
 import com.samuelribeiro.recorda.domain.model.Flashcard
+import com.samuelribeiro.recorda.domain.model.MemoryDeck
 import com.samuelribeiro.recorda.domain.model.MindMapNode
-import com.samuelribeiro.recorda.domain.model.StudyGuide
 import com.samuelribeiro.recorda.domain.model.Topic
 import com.samuelribeiro.recorda.domain.model.TopicContent
 import javax.inject.Inject
 
-/** Converts between [TopicEntity] (flashcards/mind map/study guide/content as JSON) and the [Topic] domain model. */
+/** Converts between [TopicEntity] (flashcards/mind map/content/memory deck as JSON) and the [Topic] domain model. */
 class TopicEntityMapper @Inject constructor(
     private val gson: Gson,
 ) {
     private val flashcardListType = object : TypeToken<List<Flashcard>>() {}.type
     private val mindMapNodeType = object : TypeToken<MindMapNode>() {}.type
-    private val studyGuideType = object : TypeToken<StudyGuide>() {}.type
     private val topicContentType = object : TypeToken<TopicContent>() {}.type
+    private val memoryDeckType = object : TypeToken<MemoryDeck>() {}.type
 
     fun toDomain(entity: TopicEntity): Topic = Topic(
         id = entity.id,
         name = entity.name,
         flashcards = decodeFlashcards(entity.flashcardsJson),
         mindMap = decodeMindMap(entity.mindMapJson),
-        studyGuide = decodeStudyGuide(entity.studyGuideJson),
         content = decodeContent(entity.contentJson),
+        memoryDeck = decodeMemoryDeck(entity.memoryCardsJson),
     )
 
     /** Converts a [Topic] domain model into its persistable [TopicEntity]. */
@@ -34,8 +34,8 @@ class TopicEntityMapper @Inject constructor(
         name = topic.name,
         flashcardsJson = gson.toJson(topic.flashcards),
         mindMapJson = topic.mindMap?.let { gson.toJson(it) },
-        studyGuideJson = topic.studyGuide?.let { gson.toJson(it) },
         contentJson = topic.content?.let { gson.toJson(it) },
+        memoryCardsJson = topic.memoryDeck?.let { gson.toJson(it) },
     )
 
     private fun decodeFlashcards(json: String): List<Flashcard> =
@@ -44,9 +44,9 @@ class TopicEntityMapper @Inject constructor(
     private fun decodeMindMap(json: String?): MindMapNode? =
         json?.takeIf { it.isNotBlank() }?.let { gson.fromJson(it, mindMapNodeType) }
 
-    private fun decodeStudyGuide(json: String?): StudyGuide? =
-        json?.takeIf { it.isNotBlank() }?.let { gson.fromJson(it, studyGuideType) }
-
     private fun decodeContent(json: String?): TopicContent? =
         json?.takeIf { it.isNotBlank() }?.let { gson.fromJson(it, topicContentType) }
+
+    private fun decodeMemoryDeck(json: String?): MemoryDeck? =
+        json?.takeIf { it.isNotBlank() }?.let { gson.fromJson(it, memoryDeckType) }
 }
