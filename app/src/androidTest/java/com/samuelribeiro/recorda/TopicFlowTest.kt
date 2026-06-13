@@ -12,10 +12,9 @@ import androidx.work.WorkManager
 import com.samuelribeiro.recorda.data.source.local.AppDatabase
 import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.data.source.local.TopicEntity
-import com.samuelribeiro.recorda.data.source.local.TopicStatus
 import com.samuelribeiro.recorda.presentation.ui.topic.composables.DELETE_BUTTON_TEST_TAG
-import com.samuelribeiro.recorda.presentation.ui.topic.composables.MIND_MAP_BUTTON_TEST_TAG
-import com.samuelribeiro.recorda.presentation.ui.topic.composables.REVIEW_BUTTON_TEST_TAG
+import com.samuelribeiro.recorda.presentation.ui.topic.composables.TOPIC_ITEM_TEST_TAG
+import com.samuelribeiro.recorda.presentation.ui.topichub.composables.HUB_CONTENT_TEST_TAG
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking
@@ -67,21 +66,18 @@ class TopicFlowTest {
     }
 
     @Test
-    fun seeded_topic_card_has_review_button() {
+    fun tapping_topic_card_opens_the_hub() {
         seedTopic()
-
         waitForTopicCard()
 
-        composeRule.onNodeWithTag(REVIEW_BUTTON_TEST_TAG).assertIsDisplayed()
-    }
+        composeRule.onNodeWithTag(TOPIC_ITEM_TEST_TAG).performClick()
 
-    @Test
-    fun seeded_topic_card_has_mind_map_button() {
-        seedTopic()
-
-        waitForTopicCard()
-
-        composeRule.onNodeWithTag(MIND_MAP_BUTTON_TEST_TAG).assertIsDisplayed()
+        composeRule.waitUntil(timeoutMillis = 5_000L) {
+            composeRule.onAllNodesWithTag(HUB_CONTENT_TEST_TAG)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        composeRule.onNodeWithTag(HUB_CONTENT_TEST_TAG).assertIsDisplayed()
     }
 
     @Test
@@ -115,7 +111,6 @@ class TopicFlowTest {
                 id = seededTopicId,
                 name = seededTopicName,
                 flashcardsJson = seededFlashcardsJson,
-                status = TopicStatus.DONE,
             )
         )
     }

@@ -10,6 +10,8 @@ class FirebaseAnalyticsTracker @Inject constructor(
 
     override fun track(event: AnalyticsEvent) {
         when (event) {
+            is AnalyticsEvent.TopicCreated ->
+                analytics.logEvent("topic_created", null)
             is AnalyticsEvent.FlashcardsGenerated ->
                 analytics.logEvent("flashcards_generated", Bundle().apply {
                     putInt("count", event.count)
@@ -22,8 +24,6 @@ class FirebaseAnalyticsTracker @Inject constructor(
                 analytics.logEvent("empty_topic_submitted", null)
             is AnalyticsEvent.DuplicateTopicSubmitted ->
                 analytics.logEvent("duplicate_topic_submitted", null)
-            is AnalyticsEvent.TopicQueuedOffline ->
-                analytics.logEvent("topic_queued_offline", null)
         }
     }
 }

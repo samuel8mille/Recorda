@@ -8,9 +8,10 @@ import com.samuelribeiro.recorda.domain.repository.StudyGuideRepository
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
 import com.samuelribeiro.recorda.domain.scheduler.ReviewScheduler
 import com.samuelribeiro.recorda.domain.stats.TopicStatsCalculator
+import com.samuelribeiro.recorda.domain.usecase.CreateTopicUseCase
 import com.samuelribeiro.recorda.domain.usecase.DeleteTopicUseCase
 import com.samuelribeiro.recorda.domain.usecase.EvaluateOralAnswerUseCase
-import com.samuelribeiro.recorda.domain.usecase.GenerateFlashcardsUseCase
+import com.samuelribeiro.recorda.domain.usecase.GenerateFlashcardsFromContentUseCase
 import com.samuelribeiro.recorda.domain.usecase.GenerateMindMapUseCase
 import com.samuelribeiro.recorda.domain.usecase.GenerateStudyGuideUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetFlashcardReviewsUseCase
@@ -38,10 +39,17 @@ object DomainModule {
         statsRepository: StatsRepository,
     ): DeleteTopicUseCase = DeleteTopicUseCase(topicRepository, reviewRepository, statsRepository)
 
+    /** Provides [CreateTopicUseCase]. */
     @Provides
-    fun provideGenerateFlashcardsUseCase(
+    fun provideCreateTopicUseCase(
         repository: TopicRepository
-    ): GenerateFlashcardsUseCase = GenerateFlashcardsUseCase(repository)
+    ): CreateTopicUseCase = CreateTopicUseCase(repository)
+
+    /** Provides [GenerateFlashcardsFromContentUseCase]. */
+    @Provides
+    fun provideGenerateFlashcardsFromContentUseCase(
+        repository: TopicRepository
+    ): GenerateFlashcardsFromContentUseCase = GenerateFlashcardsFromContentUseCase(repository)
 
     @Provides
     fun provideGetStoredTopicsUseCase(

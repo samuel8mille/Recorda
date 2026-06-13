@@ -6,10 +6,15 @@ import com.samuelribeiro.recorda.domain.model.FlashcardReviewState
 import com.samuelribeiro.recorda.domain.model.OralAnswerEvaluation
 import com.samuelribeiro.recorda.domain.model.OralAnswerVerdict
 import com.samuelribeiro.recorda.domain.model.Topic
+import com.samuelribeiro.recorda.domain.model.Chapter
+import com.samuelribeiro.recorda.domain.model.TopicContent
+import com.samuelribeiro.recorda.domain.model.TopicContentStep
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
 import com.samuelribeiro.recorda.domain.speech.SpeechToTextEngine
 import com.samuelribeiro.recorda.domain.tts.TextToSpeechEngine
+import com.samuelribeiro.recorda.domain.usecase.EnsureTopicContentUseCase
 import com.samuelribeiro.recorda.domain.usecase.EvaluateOralAnswerUseCase
+import com.samuelribeiro.recorda.domain.usecase.GenerateFlashcardsFromContentUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetFlashcardReviewsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetTopicUseCase
 import com.samuelribeiro.recorda.domain.usecase.UpdateCardScheduleUseCase
@@ -40,6 +45,8 @@ class ReviewViewModelTest {
     private val getTopicUseCase = GetTopicUseCase(topicRepository)
     private val getFlashcardReviews: GetFlashcardReviewsUseCase = mockk()
     private val updateCardSchedule: UpdateCardScheduleUseCase = mockk()
+    private val ensureTopicContentUseCase: EnsureTopicContentUseCase = mockk()
+    private val generateFlashcardsFromContentUseCase: GenerateFlashcardsFromContentUseCase = mockk()
     private val ttsEngine: TextToSpeechEngine = mockk(relaxed = true)
     private val speechToTextEngine: SpeechToTextEngine = mockk(relaxed = true)
     private val evaluateOralAnswerUseCase: EvaluateOralAnswerUseCase = mockk()
@@ -67,10 +74,27 @@ class ReviewViewModelTest {
             getTopicUseCase = getTopicUseCase,
             getFlashcardReviewsUseCase = getFlashcardReviews,
             updateCardScheduleUseCase = updateCardSchedule,
+            ensureTopicContentUseCase = ensureTopicContentUseCase,
+            generateFlashcardsFromContentUseCase = generateFlashcardsFromContentUseCase,
             ttsEngine = ttsEngine,
             speechToTextEngine = speechToTextEngine,
             evaluateOralAnswerUseCase = evaluateOralAnswerUseCase,
         )
+
+    @Test
+    fun `empty topic ensures content then generates flashcards`() = runTest {
+        val emptyTopic = Topic(id = "topic1", name = "Kotlin", flashcards = emptyList())
+        every { topicRepository.getTopic("topic1") } returns flowOf(emptyTopic)
+        val content = TopicContent(listOf(Chapter("0", "Intro", "Resumo", "Corpo")))
+        every { ensureTopicContentUseCase(emptyTopic) } returns
+            flowOf(Result.success(TopicContentStep.Completed(content)))
+        every { generateFlashcardsFromContentUseCase(any()) } returns flowOf(Result.success(flashcards))
+
+        createViewModel()
+
+        verify { ensureTopicContentUseCase(emptyTopic) }
+        verify { generateFlashcardsFromContentUseCase(any()) }
+    }
 
     @Test
     fun `init loads topic name and all flashcards when none have been reviewed`() = runTest {
@@ -98,6 +122,8 @@ class ReviewViewModelTest {
             getTopicUseCase = getTopicUseCase,
             getFlashcardReviewsUseCase = getFlashcardReviews,
             updateCardScheduleUseCase = updateCardSchedule,
+            ensureTopicContentUseCase = ensureTopicContentUseCase,
+            generateFlashcardsFromContentUseCase = generateFlashcardsFromContentUseCase,
             ttsEngine = ttsEngine,
             speechToTextEngine = speechToTextEngine,
             evaluateOralAnswerUseCase = evaluateOralAnswerUseCase,

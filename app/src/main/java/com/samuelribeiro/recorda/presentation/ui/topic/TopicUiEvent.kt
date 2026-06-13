@@ -4,11 +4,11 @@ package com.samuelribeiro.recorda.presentation.ui.topic
 sealed class TopicUiEvent
 
 /**
- * Triggered when the user submits a topic to generate flashcards for.
+ * Triggered when the user submits a new topic to create.
  *
  * @property topic The raw string input from the topic text field.
  */
-data class OnGenerateFlashcardsClick(val topic: String) : TopicUiEvent()
+data class OnAddTopicClick(val topic: String) : TopicUiEvent()
 
 /**
  * Triggered when the user taps the delete button on a topic. Shows a confirmation dialog.

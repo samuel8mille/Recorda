@@ -15,8 +15,8 @@ import androidx.work.WorkManager
 import com.samuelribeiro.recorda.data.source.local.AppDatabase
 import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.data.source.local.TopicEntity
-import com.samuelribeiro.recorda.data.source.local.TopicStatus
-import com.samuelribeiro.recorda.presentation.ui.topic.composables.MIND_MAP_BUTTON_TEST_TAG
+import com.samuelribeiro.recorda.presentation.ui.topic.composables.TOPIC_ITEM_TEST_TAG
+import com.samuelribeiro.recorda.presentation.ui.topichub.composables.HUB_MIND_MAP_TEST_TAG
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking
@@ -113,7 +113,6 @@ class MindMapFlowTest {
                 id = "e2e-mindmap-topic",
                 name = topicName,
                 flashcardsJson = """[{"question":"O que é Kotlin?","answer":"Linguagem JVM moderna"}]""",
-                status = TopicStatus.DONE,
                 mindMapJson = mindMapJson,
             )
         )
@@ -121,11 +120,17 @@ class MindMapFlowTest {
 
     private fun openMindMapScreen() {
         composeRule.waitUntil(timeoutMillis = 5_000L) {
-            composeRule.onAllNodesWithTag(MIND_MAP_BUTTON_TEST_TAG)
+            composeRule.onAllNodesWithTag(TOPIC_ITEM_TEST_TAG)
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
-        composeRule.onNodeWithTag(MIND_MAP_BUTTON_TEST_TAG).performClick()
+        composeRule.onNodeWithTag(TOPIC_ITEM_TEST_TAG).performClick()
+        composeRule.waitUntil(timeoutMillis = 5_000L) {
+            composeRule.onAllNodesWithTag(HUB_MIND_MAP_TEST_TAG)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        composeRule.onNodeWithTag(HUB_MIND_MAP_TEST_TAG).performClick()
         composeRule.waitUntil(timeoutMillis = 5_000L) {
             composeRule.onAllNodesWithText(childTitle)
                 .fetchSemanticsNodes()

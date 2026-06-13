@@ -6,8 +6,10 @@ package com.samuelribeiro.recorda.domain.model
  * @property id Stable identifier for the topic (used as the Room primary key).
  * @property name The study topic as typed by the user (e.g. "Segunda Guerra Mundial").
  * @property flashcards The set of question/answer pairs generated for this topic.
- * @property mindMap Cached mind map generated from [flashcards], or `null` if not generated yet.
+ * @property mindMap Cached mind map derived from [content], or `null` if not generated yet.
  * @property studyGuide Cached AI-generated study guide for this topic, or `null` if not generated yet.
+ * @property content Cached long-form chapter content, the source of flashcards and mind map,
+ * or `null` if not generated yet.
  */
 data class Topic(
     val id: String,
@@ -15,4 +17,5 @@ data class Topic(
     val flashcards: List<Flashcard>,
     val mindMap: MindMapNode? = null,
     val studyGuide: StudyGuide? = null,
+    val content: TopicContent? = null,
 )

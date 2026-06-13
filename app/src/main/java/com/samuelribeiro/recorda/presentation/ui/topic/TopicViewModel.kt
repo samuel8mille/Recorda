@@ -6,17 +6,12 @@ import com.samuelribeiro.recorda.R
 import com.samuelribeiro.recorda.analytics.AnalyticsEvent
 import com.samuelribeiro.recorda.analytics.AnalyticsTracker
 import com.samuelribeiro.recorda.core.mvi.ErrorUiState
-import com.samuelribeiro.recorda.core.mvi.LoadingUiState
-import com.samuelribeiro.recorda.core.mvi.UiEffect
-import com.samuelribeiro.recorda.core.mvi.UiEffectImpl
 import com.samuelribeiro.recorda.core.mvi.UiEvent
 import com.samuelribeiro.recorda.core.mvi.UiEventImpl
 import com.samuelribeiro.recorda.core.mvi.UiState
 import com.samuelribeiro.recorda.core.mvi.UiStateImpl
-import com.samuelribeiro.recorda.core.network.NetworkError
-import com.samuelribeiro.recorda.domain.model.Topic
+import com.samuelribeiro.recorda.domain.usecase.CreateTopicUseCase
 import com.samuelribeiro.recorda.domain.usecase.DeleteTopicUseCase
-import com.samuelribeiro.recorda.domain.usecase.GenerateFlashcardsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetStoredTopicsUseCase
 import com.samuelribeiro.recorda.logging.CrashReporter
 import com.samuelribeiro.recorda.presentation.utils.normalizeTopic
@@ -24,16 +19,13 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 /**
  * ViewModel for the topic screen.
  *
  * @param initialState The initial UI state for the topic screen.
- * @param generateFlashcardsUseCase Use case that generates flashcards for a topic via the network.
+ * @param createTopicUseCase Use case that creates a topic instantly, without any network call.
  * @param getStoredTopicsUseCase Use case that observes the locally stored topic list.
  * @param deleteTopicUseCase Use case that permanently removes a topic and its review states.
  * @param analyticsTracker Tracks user interaction events.
@@ -42,15 +34,14 @@ import timber.log.Timber
 @HiltViewModel(assistedFactory = TopicViewModel.ViewModelFactory::class)
 class TopicViewModel @AssistedInject constructor(
     @Assisted initialState: TopicUiState,
-    private val generateFlashcardsUseCase: GenerateFlashcardsUseCase,
+    private val createTopicUseCase: CreateTopicUseCase,
     private val getStoredTopicsUseCase: GetStoredTopicsUseCase,
     private val deleteTopicUseCase: DeleteTopicUseCase,
     private val analyticsTracker: AnalyticsTracker,
     private val crashlyticsReporter: CrashReporter,
 ) : ViewModel(),
     UiState<TopicUiState> by UiStateImpl(initialState),
-    UiEvent<TopicUiEvent> by UiEventImpl(),
-    UiEffect<TopicUiEffect> by UiEffectImpl() {
+    UiEvent<TopicUiEvent> by UiEventImpl() {
 
     @AssistedFactory
     interface ViewModelFactory {
@@ -75,7 +66,7 @@ class TopicViewModel @AssistedInject constructor(
         viewModelScope.launch {
             eventFlow.collect {
                 when (it) {
-                    is OnGenerateFlashcardsClick -> onGenerateFlashcardsClick(it.topic)
+                    is OnAddTopicClick -> onAddTopicClick(it.topic)
                     is RequestDeleteTopic -> setState {
                         copy(content = content.copy(pendingDeleteTopicId = it.topicId))
                     }
@@ -96,8 +87,7 @@ class TopicViewModel @AssistedInject constructor(
         }
     }
 
-    private fun onGenerateFlashcardsClick(topic: String) {
-        crashlyticsReporter.logTopicSubmitStarted()
+    private fun onAddTopicClick(topic: String) {
         validate(
             topic = topic,
             onValidationFailure = { errorMessageRes, errorType, event ->
@@ -107,7 +97,7 @@ class TopicViewModel @AssistedInject constructor(
             },
             onValidationSuccess = {
                 updateInputErrorState(null)
-                generateFlashcards(topic)
+                createTopic(normalizeTopic(topic))
             }
         )
     }
@@ -138,46 +128,11 @@ class TopicViewModel @AssistedInject constructor(
         setState { copy(content = content.copy(inputError = inputError)) }
     }
 
-    private fun generateFlashcards(topic: String) {
+    private fun createTopic(name: String) {
         viewModelScope.launch {
-            generateFlashcardsUseCase.invoke(normalizeTopic(topic))
-                .onStart { showLoading(LoadingUiState(R.string.state_loading)) }
-                .onCompletion { hideLoading() }
-                .collect { result ->
-                    val exception = result.exceptionOrNull()
-                    if (exception != null) {
-                        handleFailureResult(exception)
-                    } else {
-                        handleSuccessResult(result.getOrThrow())
-                    }
-                }
+            createTopicUseCase(name)
+            analyticsTracker.track(AnalyticsEvent.TopicCreated)
         }
-    }
-
-    private suspend fun handleSuccessResult(topic: Topic) {
-        analyticsTracker.track(AnalyticsEvent.FlashcardsGenerated(topic.flashcards.size))
-        crashlyticsReporter.logTopicSubmitSuccess(topic.name)
-        sendEffect(NavigateToReview(topic.id))
-    }
-
-    private suspend fun handleFailureResult(result: Throwable) {
-        val errorType = when (result) {
-            is NetworkError.Timeout -> "timeout"
-            is NetworkError.NoInternet -> "no_internet"
-            is NetworkError.HttpError -> "http_${result.code}"
-            is NetworkError.EmptyResponse -> "empty_response"
-            else -> "unknown"
-        }
-        if (result is NetworkError.NoInternet) {
-            analyticsTracker.track(AnalyticsEvent.TopicQueuedOffline)
-            crashlyticsReporter.logTopicQueuedOffline()
-        } else {
-            analyticsTracker.track(AnalyticsEvent.FlashcardsGenerationFailed(errorType))
-        }
-        crashlyticsReporter.logTopicSubmitFailed(errorType)
-        crashlyticsReporter.setLastNetworkError(errorType)
-        Timber.e(result, "Flashcard generation failed")
-        sendEffect(ShowError(result))
     }
 
     /**

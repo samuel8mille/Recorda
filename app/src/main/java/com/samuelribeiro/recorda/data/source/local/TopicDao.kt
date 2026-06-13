@@ -11,9 +11,6 @@ interface TopicDao {
     @Query("SELECT * FROM topics ORDER BY rowid DESC")
     fun getAll(): Flow<List<TopicEntity>>
 
-    @Query("SELECT * FROM topics WHERE status = 'PENDING'")
-    suspend fun getPending(): List<TopicEntity>
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: TopicEntity)
 
@@ -21,8 +18,9 @@ interface TopicDao {
     @Query("SELECT * FROM topics WHERE id = :id")
     fun getById(id: String): Flow<TopicEntity?>
 
-    @Query("UPDATE topics SET status = 'DONE', flashcardsJson = :flashcardsJson WHERE id = :id")
-    suspend fun markDone(id: String, flashcardsJson: String)
+    /** Persists the generated flashcards for the topic with [id]. */
+    @Query("UPDATE topics SET flashcardsJson = :flashcardsJson WHERE id = :id")
+    suspend fun updateFlashcards(id: String, flashcardsJson: String)
 
     /** Persists the generated mind map for the topic with [id]. */
     @Query("UPDATE topics SET mindMapJson = :mindMapJson WHERE id = :id")
@@ -31,6 +29,10 @@ interface TopicDao {
     /** Persists the generated study guide for the topic with [id]. */
     @Query("UPDATE topics SET studyGuideJson = :studyGuideJson WHERE id = :id")
     suspend fun updateStudyGuide(id: String, studyGuideJson: String)
+
+    /** Persists the (possibly partial) chapter content for the topic with [id]. */
+    @Query("UPDATE topics SET contentJson = :contentJson WHERE id = :id")
+    suspend fun updateContent(id: String, contentJson: String)
 
     /** Deletes the topic with [id] from the database. */
     @Query("DELETE FROM topics WHERE id = :id")

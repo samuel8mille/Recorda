@@ -45,6 +45,7 @@ android {
     dynamicFeatures.add(":feature:mind_map")
     dynamicFeatures.add(":feature:study")
     dynamicFeatures.add(":feature:stats")
+    dynamicFeatures.add(":feature:content")
     compileSdk = 37
 
     defaultConfig {

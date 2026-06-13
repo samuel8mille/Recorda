@@ -12,6 +12,9 @@ import com.samuelribeiro.recorda.core.mvi.UiEventImpl
 import com.samuelribeiro.recorda.core.mvi.UiState
 import com.samuelribeiro.recorda.core.mvi.UiStateImpl
 import com.samuelribeiro.recorda.domain.model.Topic
+import com.samuelribeiro.recorda.domain.model.TopicContent
+import com.samuelribeiro.recorda.domain.model.TopicContentStep
+import com.samuelribeiro.recorda.domain.usecase.EnsureTopicContentUseCase
 import com.samuelribeiro.recorda.domain.usecase.GenerateMindMapUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetTopicUseCase
 import dagger.assisted.Assisted
@@ -27,12 +30,14 @@ import kotlinx.coroutines.launch
  *
  * @param topicId The ID of the topic whose mind map is shown.
  * @param getTopicUseCase Observes the topic, including any cached mind map, from the local DB.
- * @param generateMindMapUseCase Asks Gemini to organize the topic's flashcards into a mind map.
+ * @param ensureTopicContentUseCase Generates the topic's chapter content first, when missing.
+ * @param generateMindMapUseCase Asks Gemini to organize the topic's content into a mind map.
  */
 @HiltViewModel(assistedFactory = MindMapViewModel.ViewModelFactory::class)
 class MindMapViewModel @AssistedInject constructor(
     @Assisted private val topicId: String,
     private val getTopicUseCase: GetTopicUseCase,
+    private val ensureTopicContentUseCase: EnsureTopicContentUseCase,
     private val generateMindMapUseCase: GenerateMindMapUseCase,
 ) : ViewModel(),
     UiState<MindMapUiState> by UiStateImpl(MindMapUiState()),
@@ -83,7 +88,13 @@ class MindMapViewModel @AssistedInject constructor(
 
     private fun generateMindMap(topic: Topic) {
         viewModelScope.launch {
-            generateMindMapUseCase(topic)
+            showLoading(LoadingUiState(R.string.mind_map_state_preparing_content))
+            val preparedContent = prepareContent(topic)
+            if (preparedContent == null) {
+                hideLoading()
+                return@launch
+            }
+            generateMindMapUseCase(topic.copy(content = preparedContent))
                 .onStart { showLoading(LoadingUiState(R.string.mind_map_state_loading)) }
                 .onCompletion { hideLoading() }
                 .collect { result ->
@@ -94,6 +105,18 @@ class MindMapViewModel @AssistedInject constructor(
                     }
                 }
         }
+    }
+
+    private suspend fun prepareContent(topic: Topic): TopicContent? {
+        var completed: TopicContent? = null
+        ensureTopicContentUseCase(topic).collect { result ->
+            result.onSuccess { step ->
+                if (step is TopicContentStep.Completed) completed = step.content
+            }.onFailure {
+                showError(ErrorUiState(R.string.mind_map_error_generation))
+            }
+        }
+        return completed
     }
 
     /** Dispatches a [MindMapUiEvent] to be processed by this ViewModel. */

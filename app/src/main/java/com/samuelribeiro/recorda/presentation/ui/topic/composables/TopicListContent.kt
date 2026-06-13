@@ -13,21 +13,18 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -59,24 +56,17 @@ import com.samuelribeiro.recorda.ui.theme.SpaceMedium
 import com.samuelribeiro.recorda.ui.theme.SpaceSmall
 import com.samuelribeiro.recorda.presentation.ui.topic.TopicUiState
 
-const val GENERATE_BUTTON_TEST_TAG = "GenerateButtonTestTag"
+const val ADD_TOPIC_BUTTON_TEST_TAG = "AddTopicButtonTestTag"
 const val INPUT_ERROR_TEST_TAG = "InputErrorTestTag"
 const val TOPIC_ITEM_TEST_TAG = "TopicItemTestTag"
 const val TOPIC_INPUT_TEST_TAG = "TopicInput"
-const val REVIEW_BUTTON_TEST_TAG = "ReviewButtonTestTag"
-const val MIND_MAP_BUTTON_TEST_TAG = "MindMapButtonTestTag"
 const val DELETE_BUTTON_TEST_TAG = "DeleteButtonTestTag"
-const val TOPIC_STUDY_AREA_TEST_TAG = "TopicStudyAreaTestTag"
-const val STATS_BUTTON_TEST_TAG = "StatsButtonTestTag"
 
 @Composable
-fun TopicContent(
+fun TopicListContent(
     uiState: TopicUiState,
-    onGenerateFlashcardsClick: (String) -> Unit,
-    onReviewClick: (String) -> Unit,
-    onMindMapClick: (String) -> Unit,
-    onStudyClick: (String) -> Unit,
-    onStatsClick: (String) -> Unit,
+    onAddTopicClick: (String) -> Unit,
+    onTopicClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
@@ -112,8 +102,8 @@ fun TopicContent(
         Spacer(Modifier.height(SpaceLarge))
         TopicContentHeader(
             uiState = uiState,
-            onGenerateFlashcardsClick = { value ->
-                onGenerateFlashcardsClick(value)
+            onAddTopicClick = { value ->
+                onAddTopicClick(value)
                 setTopic("")
             },
             topicValue = topic,
@@ -138,10 +128,7 @@ fun TopicContent(
                 items(items = uiState.topics) { item ->
                     TopicContentListItem(
                         item = item,
-                        onReviewClick = onReviewClick,
-                        onMindMapClick = onMindMapClick,
-                        onStudyClick = onStudyClick,
-                        onStatsClick = onStatsClick,
+                        onTopicClick = onTopicClick,
                         onDeleteClick = onDeleteClick,
                     )
                 }
@@ -155,7 +142,7 @@ fun TopicContentHeader(
     uiState: TopicUiState,
     topicValue: String,
     onTopicChange: (String) -> Unit,
-    onGenerateFlashcardsClick: (String) -> Unit
+    onAddTopicClick: (String) -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
     val errorMessage = uiState.inputError?.let { stringResource(it.messageRes) }
@@ -184,7 +171,7 @@ fun TopicContentHeader(
                         ),
                         keyboardActions = KeyboardActions(
                             onSend = {
-                                onGenerateFlashcardsClick(topicValue.trim())
+                                onAddTopicClick(topicValue.trim())
                                 onTopicChange("")
                                 focusRequester.requestFocus()
                             }
@@ -203,16 +190,16 @@ fun TopicContentHeader(
                 }
                 Spacer(Modifier.width(SpaceMedium))
                 Button(
-                    modifier = Modifier.testTag(GENERATE_BUTTON_TEST_TAG),
+                    modifier = Modifier.testTag(ADD_TOPIC_BUTTON_TEST_TAG),
                     onClick = {
-                        onGenerateFlashcardsClick(topicValue.trim())
+                        onAddTopicClick(topicValue.trim())
                         onTopicChange("")
                         focusRequester.requestFocus()
                     }
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = stringResource(R.string.topic_button_generate_description)
+                        contentDescription = stringResource(R.string.topic_button_add_description)
                     )
                 }
             }
@@ -230,16 +217,16 @@ fun TopicContentHeader(
 @Composable
 fun TopicContentListItem(
     item: Topic,
-    onReviewClick: (String) -> Unit,
-    onMindMapClick: (String) -> Unit,
-    onStudyClick: (String) -> Unit,
-    onStatsClick: (String) -> Unit,
+    onTopicClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
 ) {
     ElevatedCard(
         modifier = Modifier
             .testTag(TOPIC_ITEM_TEST_TAG)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable(onClickLabel = stringResource(R.string.topic_open_description)) {
+                onTopicClick(item.id)
+            },
     ) {
         Row(
             modifier = Modifier
@@ -250,26 +237,11 @@ fun TopicContentListItem(
             Text(
                 modifier = Modifier
                     .weight(1f)
-                    .testTag(TOPIC_STUDY_AREA_TEST_TAG)
-                    .clickable(onClickLabel = stringResource(R.string.study_open_description)) {
-                        onStudyClick(item.id)
-                    }
                     .heightIn(min = 48.dp)
-                    .wrapContentHeight()
-                    .semantics(mergeDescendants = true) {},
+                    .wrapContentHeight(),
                 text = item.name,
                 style = MaterialTheme.typography.titleMedium,
             )
-            IconButton(
-                modifier = Modifier.testTag(STATS_BUTTON_TEST_TAG),
-                onClick = { onStatsClick(item.id) },
-            ) {
-                Icon(
-                    imageVector = Icons.Default.DateRange,
-                    contentDescription = stringResource(R.string.topic_stats_button_description),
-                    tint = MaterialTheme.colorScheme.secondary,
-                )
-            }
             IconButton(
                 modifier = Modifier.testTag(DELETE_BUTTON_TEST_TAG),
                 onClick = { onDeleteClick(item.id) },
@@ -279,18 +251,6 @@ fun TopicContentListItem(
                     contentDescription = stringResource(R.string.topic_delete_button_description),
                     tint = MaterialTheme.colorScheme.error,
                 )
-            }
-            OutlinedButton(
-                modifier = Modifier.testTag(MIND_MAP_BUTTON_TEST_TAG),
-                onClick = { onMindMapClick(item.id) },
-            ) {
-                Text(stringResource(R.string.topic_mind_map_button))
-            }
-            OutlinedButton(
-                modifier = Modifier.testTag(REVIEW_BUTTON_TEST_TAG),
-                onClick = { onReviewClick(item.id) },
-            ) {
-                Text(stringResource(R.string.topic_review_button))
             }
         }
     }

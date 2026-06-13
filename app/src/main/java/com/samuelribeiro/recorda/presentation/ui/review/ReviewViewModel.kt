@@ -10,9 +10,14 @@ import com.samuelribeiro.recorda.core.mvi.UiState
 import com.samuelribeiro.recorda.core.mvi.UiStateImpl
 import com.samuelribeiro.recorda.domain.model.CardRating
 import com.samuelribeiro.recorda.domain.model.FlashcardReviewState
+import com.samuelribeiro.recorda.domain.model.Topic
+import com.samuelribeiro.recorda.domain.model.TopicContent
+import com.samuelribeiro.recorda.domain.model.TopicContentStep
 import com.samuelribeiro.recorda.domain.speech.SpeechToTextEngine
 import com.samuelribeiro.recorda.domain.tts.TextToSpeechEngine
+import com.samuelribeiro.recorda.domain.usecase.EnsureTopicContentUseCase
 import com.samuelribeiro.recorda.domain.usecase.EvaluateOralAnswerUseCase
+import com.samuelribeiro.recorda.domain.usecase.GenerateFlashcardsFromContentUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetFlashcardReviewsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetTopicUseCase
 import com.samuelribeiro.recorda.domain.usecase.UpdateCardScheduleUseCase
@@ -20,6 +25,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**
@@ -29,6 +35,8 @@ import kotlinx.coroutines.launch
  * @param getTopicUseCase Observes the topic and its flashcards from the local DB.
  * @param getFlashcardReviewsUseCase Loads saved SM-2 states for this topic's cards.
  * @param updateCardScheduleUseCase Schedules a rated card via SM-2 and persists the result.
+ * @param ensureTopicContentUseCase Generates the topic's chapter content first, when missing.
+ * @param generateFlashcardsFromContentUseCase Derives flashcards from the topic's content.
  * @param ttsEngine Speaks card content aloud; swappable via the domain interface.
  * @param speechToTextEngine Captures the user's spoken answer; swappable via the domain interface.
  * @param evaluateOralAnswerUseCase Asks Gemini to grade the user's spoken answer.
@@ -39,6 +47,8 @@ class ReviewViewModel @AssistedInject constructor(
     private val getTopicUseCase: GetTopicUseCase,
     private val getFlashcardReviewsUseCase: GetFlashcardReviewsUseCase,
     private val updateCardScheduleUseCase: UpdateCardScheduleUseCase,
+    private val ensureTopicContentUseCase: EnsureTopicContentUseCase,
+    private val generateFlashcardsFromContentUseCase: GenerateFlashcardsFromContentUseCase,
     private val ttsEngine: TextToSpeechEngine,
     private val speechToTextEngine: SpeechToTextEngine,
     private val evaluateOralAnswerUseCase: EvaluateOralAnswerUseCase,
@@ -55,6 +65,7 @@ class ReviewViewModel @AssistedInject constructor(
     }
 
     private val reviewStates = mutableMapOf<Int, FlashcardReviewState>()
+    private var hasRequestedGeneration = false
 
     init {
         handleEvents()
@@ -64,20 +75,45 @@ class ReviewViewModel @AssistedInject constructor(
             }
             getTopicUseCase(topicId).collect { topic ->
                 topic ?: return@collect
-                val due = topic.flashcards.filterIndexed { index, _ -> isDue(index) }
-                val alreadyLoaded = stateFlow.value.content.flashcards.isNotEmpty()
-                setState {
-                    copy(
-                        content = content.copy(
-                            topicName = topic.name,
-                            flashcards = due,
-                            isNothingDue = due.isEmpty() && topic.flashcards.isNotEmpty(),
-                        )
-                    )
+                if (topic.flashcards.isEmpty() && !hasRequestedGeneration) {
+                    hasRequestedGeneration = true
+                    prepareFlashcards(topic)
+                    return@collect
                 }
-                if (!alreadyLoaded && due.isNotEmpty()) ttsEngine.speak(due[0].question)
+                applyTopic(topic)
             }
         }
+    }
+
+    private fun applyTopic(topic: Topic) {
+        val due = topic.flashcards.filterIndexed { index, _ -> isDue(index) }
+        val alreadyLoaded = stateFlow.value.content.flashcards.isNotEmpty()
+        setState {
+            copy(
+                content = content.copy(
+                    topicName = topic.name,
+                    flashcards = due,
+                    isNothingDue = due.isEmpty() && topic.flashcards.isNotEmpty(),
+                )
+            )
+        }
+        if (!alreadyLoaded && due.isNotEmpty()) ttsEngine.speak(due[0].question)
+    }
+
+    private suspend fun prepareFlashcards(topic: Topic) {
+        setState { copy(content = content.copy(topicName = topic.name)) }
+        val preparedContent = ensureContent(topic) ?: return
+        generateFlashcardsFromContentUseCase(topic.copy(content = preparedContent)).collect()
+    }
+
+    private suspend fun ensureContent(topic: Topic): TopicContent? {
+        var completed: TopicContent? = null
+        ensureTopicContentUseCase(topic).collect { result ->
+            result.onSuccess { step ->
+                if (step is TopicContentStep.Completed) completed = step.content
+            }
+        }
+        return completed
     }
 
     private fun handleEvents() {

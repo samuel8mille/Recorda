@@ -17,8 +17,8 @@ import com.samuelribeiro.recorda.data.source.local.ReviewLogDao
 import com.samuelribeiro.recorda.data.source.local.ReviewLogEntity
 import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.data.source.local.TopicEntity
-import com.samuelribeiro.recorda.data.source.local.TopicStatus
-import com.samuelribeiro.recorda.presentation.ui.topic.composables.STATS_BUTTON_TEST_TAG
+import com.samuelribeiro.recorda.presentation.ui.topic.composables.TOPIC_ITEM_TEST_TAG
+import com.samuelribeiro.recorda.presentation.ui.topichub.composables.HUB_STATS_TEST_TAG
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking
@@ -100,7 +100,6 @@ class StatsFlowTest {
                 name = topicName,
                 flashcardsJson =
                 """[{"question":"Q1?","answer":"A1"},{"question":"Q2?","answer":"A2"}]""",
-                status = TopicStatus.DONE,
             )
         )
         flashcardReviewDao.upsert(
@@ -122,11 +121,17 @@ class StatsFlowTest {
 
     private fun openStatsScreen() {
         composeRule.waitUntil(timeoutMillis = 5_000L) {
-            composeRule.onAllNodesWithTag(STATS_BUTTON_TEST_TAG)
+            composeRule.onAllNodesWithTag(TOPIC_ITEM_TEST_TAG)
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
-        composeRule.onNodeWithTag(STATS_BUTTON_TEST_TAG).performClick()
+        composeRule.onNodeWithTag(TOPIC_ITEM_TEST_TAG).performClick()
+        composeRule.waitUntil(timeoutMillis = 5_000L) {
+            composeRule.onAllNodesWithTag(HUB_STATS_TEST_TAG)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        composeRule.onNodeWithTag(HUB_STATS_TEST_TAG).performClick()
         val totalLabel = composeRule.activity.getString(R.string.stats_total_cards)
         composeRule.waitUntil(timeoutMillis = 5_000L) {
             composeRule.onAllNodesWithText(totalLabel)
