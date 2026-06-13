@@ -86,6 +86,22 @@ class ContentViewModelTest {
     }
 
     @Test
+    fun `RetryGeneration after a failure re-runs generation and clears the error`() = runTest {
+        every { topicRepository.getTopic("topic1") } returns flowOf(topic)
+        every { ensureTopicContentUseCase(topic) } returnsMany listOf(
+            flowOf(Result.failure(Exception("boom"))),
+            flowOf(Result.success(TopicContentStep.Completed(completeContent))),
+        )
+        val vm = createViewModel()
+        assertNotNull(vm.stateFlow.value.error)
+
+        vm.onSendEvent(RetryGeneration)
+
+        assertNull(vm.stateFlow.value.error)
+        assertEquals(completeContent, vm.stateFlow.value.content.content)
+    }
+
+    @Test
     fun `SelectChapter and CloseChapter update selected chapter`() = runTest {
         every { topicRepository.getTopic("topic1") } returns flowOf(topic.copy(content = completeContent))
         every { ensureTopicContentUseCase(any()) } returns

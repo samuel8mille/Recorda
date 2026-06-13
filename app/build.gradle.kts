@@ -26,6 +26,7 @@ val jacocoExcludes = listOf(
     "**/data/source/remote/api/**",
     "**/data/source/remote/dto/**",
     "**/data/speech/**",
+    "**/data/tts/**",
     "**/ui/theme/**",
     "**/*_Impl*",
     "**/*_Factory*",

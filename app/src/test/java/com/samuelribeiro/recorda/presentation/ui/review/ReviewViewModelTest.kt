@@ -97,6 +97,32 @@ class ReviewViewModelTest {
     }
 
     @Test
+    fun `empty topic with content failure does not generate flashcards`() = runTest {
+        val emptyTopic = Topic(id = "topic1", name = "Kotlin", flashcards = emptyList())
+        every { topicRepository.getTopic("topic1") } returns flowOf(emptyTopic)
+        every { ensureTopicContentUseCase(emptyTopic) } returns flowOf(Result.failure(Exception("boom")))
+
+        createViewModel()
+
+        verify { ensureTopicContentUseCase(emptyTopic) }
+        verify(exactly = 0) { generateFlashcardsFromContentUseCase(any()) }
+    }
+
+    @Test
+    fun `StartOralAnswer with failed evaluation leaves card unflipped`() = runTest {
+        coEvery { speechToTextEngine.listen() } returns Result.success("alguma resposta")
+        coEvery { evaluateOralAnswerUseCase(any(), any(), any()) } returns
+            flowOf(Result.failure(Exception("grading failed")))
+        val vm = createViewModel()
+
+        vm.onSendEvent(StartOralAnswer)
+
+        assertFalse(vm.stateFlow.value.content.isListening)
+        assertFalse(vm.stateFlow.value.content.isFlipped)
+        assertNull(vm.stateFlow.value.content.oralEvaluation)
+    }
+
+    @Test
     fun `init loads topic name and all flashcards when none have been reviewed`() = runTest {
         val vm = createViewModel()
 
