@@ -62,28 +62,25 @@ class TopicDaoTest {
     }
 
     @Test
-    fun markDone_updates_status_and_flashcardsJson() = runBlocking {
-        dao.insert(
-            TopicEntity(id = "t1", name = "Kotlin", flashcardsJson = "[]", status = TopicStatus.PENDING)
-        )
+    fun updateFlashcards_updates_flashcardsJson() = runBlocking {
+        dao.insert(TopicEntity(id = "t1", name = "Kotlin", flashcardsJson = "[]"))
         val json = """[{"question":"O que é Kotlin?","answer":"Linguagem JVM moderna"}]"""
-        dao.markDone("t1", json)
+        dao.updateFlashcards("t1", json)
 
         val result = dao.getById("t1").first()
 
-        assertEquals(TopicStatus.DONE, result?.status)
         assertEquals(json, result?.flashcardsJson)
     }
 
     @Test
-    fun getPending_returns_only_pending_topics() = runBlocking {
-        dao.insert(TopicEntity(id = "t1", name = "Done", flashcardsJson = "[]", status = TopicStatus.DONE))
-        dao.insert(TopicEntity(id = "t2", name = "Pending", flashcardsJson = "[]", status = TopicStatus.PENDING))
+    fun updateContent_updates_contentJson() = runBlocking {
+        dao.insert(TopicEntity(id = "t1", name = "Kotlin", flashcardsJson = "[]"))
+        val json = """{"chapters":[{"id":"0","title":"Intro","summary":"s","body":"corpo"}]}"""
+        dao.updateContent("t1", json)
 
-        val result = dao.getPending()
+        val result = dao.getById("t1").first()
 
-        assertEquals(1, result.size)
-        assertEquals("t2", result[0].id)
+        assertEquals(json, result?.contentJson)
     }
 
     @Test

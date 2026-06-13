@@ -1,9 +1,13 @@
 package com.samuelribeiro.recorda.presentation.ui.mindmap
 
+import com.samuelribeiro.recorda.domain.model.Chapter
 import com.samuelribeiro.recorda.domain.model.Flashcard
 import com.samuelribeiro.recorda.domain.model.MindMapNode
 import com.samuelribeiro.recorda.domain.model.Topic
+import com.samuelribeiro.recorda.domain.model.TopicContent
+import com.samuelribeiro.recorda.domain.model.TopicContentStep
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
+import com.samuelribeiro.recorda.domain.usecase.EnsureTopicContentUseCase
 import com.samuelribeiro.recorda.domain.usecase.GenerateMindMapUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetTopicUseCase
 import com.samuelribeiro.recorda.util.MainDispatcherRule
@@ -28,29 +32,35 @@ class MindMapViewModelTest {
 
     private val topicRepository: TopicRepository = mockk()
     private val getTopicUseCase = GetTopicUseCase(topicRepository)
+    private val ensureTopicContentUseCase: EnsureTopicContentUseCase = mockk()
     private val generateMindMapUseCase: GenerateMindMapUseCase = mockk()
 
     private val flashcards = listOf(Flashcard("O que é Kotlin?", "Uma linguagem JVM moderna"))
-    private val topic = Topic(id = "topic1", name = "Kotlin", flashcards = flashcards)
+    private val content = TopicContent(listOf(Chapter("0", "Intro", "Resumo", "Corpo completo")))
+    private val topic = Topic(id = "topic1", name = "Kotlin", flashcards = flashcards, content = content)
 
     private fun createViewModel(topicId: String = "topic1"): MindMapViewModel =
         MindMapViewModel(
             topicId = topicId,
             getTopicUseCase = getTopicUseCase,
+            ensureTopicContentUseCase = ensureTopicContentUseCase,
             generateMindMapUseCase = generateMindMapUseCase,
         )
 
     @Test
-    fun `init generates mind map when topic has no cached mind map`() = runTest {
+    fun `init ensures content then generates mind map when none is cached`() = runTest {
         every { topicRepository.getTopic("topic1") } returns flowOf(topic)
+        every { ensureTopicContentUseCase(topic) } returns
+            flowOf(Result.success(TopicContentStep.Completed(content)))
         val node = MindMapNode(id = "0", title = "Kotlin", children = listOf(MindMapNode(id = "0-0", title = "Sintaxe")))
-        every { generateMindMapUseCase(topic) } returns flowOf(Result.success(node))
+        every { generateMindMapUseCase(any()) } returns flowOf(Result.success(node))
 
         val vm = createViewModel()
 
         assertEquals("Kotlin", vm.stateFlow.value.content.topicName)
         assertEquals(node, vm.stateFlow.value.content.rootNode)
         assertNull(vm.stateFlow.value.loading)
+        verify { ensureTopicContentUseCase(topic) }
     }
 
     @Test
@@ -62,6 +72,7 @@ class MindMapViewModelTest {
 
         assertEquals(cachedNode, vm.stateFlow.value.content.rootNode)
         verify(exactly = 0) { generateMindMapUseCase(any()) }
+        verify(exactly = 0) { ensureTopicContentUseCase(any()) }
     }
 
     @Test
@@ -81,12 +92,26 @@ class MindMapViewModelTest {
     @Test
     fun `generation failure sets error and leaves rootNode null`() = runTest {
         every { topicRepository.getTopic("topic1") } returns flowOf(topic)
-        every { generateMindMapUseCase(topic) } returns flowOf(Result.failure(Exception("boom")))
+        every { ensureTopicContentUseCase(topic) } returns
+            flowOf(Result.success(TopicContentStep.Completed(content)))
+        every { generateMindMapUseCase(any()) } returns flowOf(Result.failure(Exception("boom")))
 
         val vm = createViewModel()
 
         assertNull(vm.stateFlow.value.content.rootNode)
         assertNotNull(vm.stateFlow.value.error)
+    }
+
+    @Test
+    fun `content failure sets error and does not generate mind map`() = runTest {
+        every { topicRepository.getTopic("topic1") } returns flowOf(topic)
+        every { ensureTopicContentUseCase(topic) } returns flowOf(Result.failure(Exception("boom")))
+
+        val vm = createViewModel()
+
+        assertNull(vm.stateFlow.value.content.rootNode)
+        assertNotNull(vm.stateFlow.value.error)
+        verify(exactly = 0) { generateMindMapUseCase(any()) }
     }
 
     @Test

@@ -11,8 +11,9 @@ import javax.inject.Inject
  */
 class GeminiFlashcardPromptBuilder @Inject constructor() : FlashcardPromptBuilder {
 
-    override fun build(topicName: String): String =
-        "Gere exatamente 5 flashcards de estudo sobre o tema \"$topicName\". " +
+    override fun build(topicName: String, contentSummary: String): String =
+        "Gere exatamente 5 flashcards de estudo sobre o tema \"$topicName\", " +
+            "baseando-se no conteúdo a seguir:\n$contentSummary\n\n" +
             "Responda apenas com uma linha por flashcard, sem numeração nem texto extra, " +
             "no formato exato: P: <pergunta> | R: <resposta>"
 }

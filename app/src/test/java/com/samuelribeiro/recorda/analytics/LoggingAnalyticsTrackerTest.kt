@@ -27,7 +27,7 @@ class LoggingAnalyticsTrackerTest {
     }
 
     @Test
-    fun `track TopicQueuedOffline does not throw`() {
-        tracker.track(AnalyticsEvent.TopicQueuedOffline)
+    fun `track TopicCreated does not throw`() {
+        tracker.track(AnalyticsEvent.TopicCreated)
     }
 }

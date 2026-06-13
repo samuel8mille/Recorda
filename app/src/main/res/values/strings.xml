@@ -18,23 +18,26 @@
          de recursos do módulo base pelo bundletool ao empacotar o app bundle. -->
     <string name="title_stats" translatable="false">Estatísticas</string>
 
+    <!-- Título do módulo dinâmico :feature:content, exigido na tabela
+         de recursos do módulo base pelo bundletool ao empacotar o app bundle. -->
+    <string name="title_content" translatable="false">Conteúdo</string>
+
     <string name="state_loading">Gerando seus flashcards…</string>
 
     <string name="topic_input_hint">Sobre o que você quer estudar?</string>
-    <string name="topic_input_error_empty">Digite um tema para gerar flashcards</string>
-    <string name="topic_input_error_duplicate">Você já tem flashcards para esse tema</string>
-    <string name="topic_button_generate_description">Gerar flashcards</string>
+    <string name="topic_input_error_empty">Digite um tema para criar</string>
+    <string name="topic_input_error_duplicate">Você já tem esse tema</string>
+    <string name="topic_button_add_description">Adicionar tema</string>
     <string name="topic_list_title">Seus temas</string>
-    <string name="topic_list_empty_message">Nenhum flashcard ainda. Digite um tema acima para começar.</string>
-    <string name="topic_review_button">Revisar</string>
-    <string name="topic_mind_map_button">Mapa mental</string>
+    <string name="topic_list_empty_message">Nenhum tema ainda. Digite um tema acima para começar.</string>
+    <string name="topic_open_description">Abrir tema</string>
     <string name="topic_delete_button_description">Excluir tópico</string>
     <string name="topic_delete_dialog_title">Excluir tópico?</string>
     <string name="topic_delete_dialog_message">Todos os flashcards e o histórico de revisão de %1$s serão removidos permanentemente.</string>
     <string name="topic_delete_dialog_confirm">Excluir</string>
     <string name="topic_delete_dialog_cancel">Cancelar</string>
 
-    <string name="error_no_internet">Sem conexão com a internet. Seu tema foi salvo e será gerado assim que você ficar online.</string>
+    <string name="error_no_internet">Sem conexão com a internet. Tente novamente quando estiver online.</string>
     <string name="error_timeout">A requisição demorou demais. Tente novamente.</string>
     <string name="error_empty_response">A IA não retornou nenhum conteúdo. Tente novamente.</string>
     <string name="error_http_generic">Erro do servidor (código %1$d). Tente novamente mais tarde.</string>
@@ -60,8 +63,26 @@
     <string name="review_oral_verdict_partial">Quase lá</string>
     <string name="review_oral_verdict_incorrect">Não foi dessa vez</string>
 
+    <string name="topic_hub_screen_title">Tema</string>
+    <string name="topic_hub_back_description">Voltar</string>
+    <string name="hub_item_content">Conteúdo</string>
+    <string name="hub_item_study">Guia de estudo</string>
+    <string name="hub_item_mind_map">Mapa mental</string>
+    <string name="hub_item_review">Revisão</string>
+    <string name="hub_item_stats">Estatísticas</string>
+
+    <string name="content_screen_title">Conteúdo</string>
+    <string name="content_state_loading_chapters">Montando os capítulos…</string>
+    <string name="content_chapter_generating">Gerando capítulo %1$d de %2$d…</string>
+    <string name="content_error_generation">Não foi possível gerar o conteúdo. Tente novamente.</string>
+    <string name="content_retry_button">Tentar novamente</string>
+    <string name="content_chapter_open_description">Abrir capítulo</string>
+    <string name="content_back_description">Voltar</string>
+    <string name="content_close_detail_description">Voltar para a lista de capítulos</string>
+
     <string name="mind_map_screen_title">Mapa mental</string>
     <string name="mind_map_state_loading">Gerando mapa mental…</string>
+    <string name="mind_map_state_preparing_content">Preparando o conteúdo…</string>
     <string name="mind_map_error_generation">Não foi possível gerar o mapa mental. Tente novamente.</string>
     <string name="mind_map_expand_description">Expandir</string>
     <string name="mind_map_collapse_description">Recolher</string>
@@ -69,7 +90,6 @@
     <string name="study_screen_title">Guia de estudo</string>
     <string name="study_state_loading">Gerando guia de estudo…</string>
     <string name="study_error_generation">Não foi possível gerar o guia de estudo. Tente novamente.</string>
-    <string name="study_open_description">Abrir guia de estudo</string>
     <string name="study_section_open_description">Abrir detalhes do tópico</string>
     <string name="study_back_description">Voltar</string>
     <string name="study_close_detail_description">Voltar para a lista de tópicos</string>
@@ -83,7 +103,6 @@
     <string name="stats_error_loading">Não foi possível carregar as estatísticas. Tente novamente.</string>
     <string name="stats_retry_button">Tentar novamente</string>
     <string name="stats_back_description">Voltar</string>
-    <string name="topic_stats_button_description">Ver estatísticas de retenção</string>
     <string name="stats_total_cards">Total de cards</string>
     <string name="stats_cards_on_track">Cards em dia</string>
     <string name="stats_cards_due">Cards a revisar</string>

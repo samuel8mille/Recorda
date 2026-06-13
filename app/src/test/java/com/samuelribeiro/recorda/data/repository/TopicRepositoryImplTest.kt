@@ -1,8 +1,5 @@
 package com.samuelribeiro.recorda.data.repository
 
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkManager
 import com.google.gson.Gson
 import com.samuelribeiro.recorda.core.network.NetworkError
 import com.samuelribeiro.recorda.core.network.ServiceExecutor
@@ -10,17 +7,17 @@ import com.samuelribeiro.recorda.data.mapper.FlashcardMapper
 import com.samuelribeiro.recorda.data.mapper.TopicEntityMapper
 import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.data.source.local.TopicEntity
-import com.samuelribeiro.recorda.data.source.local.TopicStatus
 import com.samuelribeiro.recorda.data.source.remote.service.GeminiService
+import com.samuelribeiro.recorda.domain.model.Chapter
 import com.samuelribeiro.recorda.domain.model.Flashcard
+import com.samuelribeiro.recorda.domain.model.Topic
+import com.samuelribeiro.recorda.domain.model.TopicContent
 import com.samuelribeiro.recorda.domain.prompt.FlashcardPromptBuilder
-import com.samuelribeiro.recorda.logging.CrashReporter
 import com.samuelribeiro.recorda.util.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -42,10 +39,8 @@ class TopicRepositoryImplTest {
     private val flashcardMapper = FlashcardMapper()
     private val topicEntityMapper = TopicEntityMapper(Gson())
     private val topicDao: TopicDao = mockk(relaxed = true)
-    private val workManager: WorkManager = mockk(relaxed = true)
-    private val crashReporter: CrashReporter = mockk(relaxed = true)
     private val promptBuilder: FlashcardPromptBuilder = mockk {
-        every { build(any()) } answers { "prompt for ${firstArg<String>()}" }
+        every { build(any(), any()) } answers { "prompt for ${firstArg<String>()}" }
     }
 
     private val serviceExecutor by lazy {
@@ -59,16 +54,22 @@ class TopicRepositoryImplTest {
             topicEntityMapper = topicEntityMapper,
             serviceExecutor = serviceExecutor,
             topicDao = topicDao,
-            workManager = workManager,
-            crashlyticsReporter = crashReporter,
+            gson = Gson(),
             promptBuilder = promptBuilder,
         )
     }
 
+    private fun topicWithContent() = Topic(
+        id = "1",
+        name = "Kotlin",
+        flashcards = emptyList(),
+        content = TopicContent(listOf(Chapter("0", "Intro", "Resumo", "Corpo do capítulo"))),
+    )
+
     @Test
     fun `getStoredTopics maps DAO entities to domain topics`() = runTest {
         val flashcardsJson = Gson().toJson(listOf(Flashcard("Q?", "A")))
-        val entity = TopicEntity("1", "Kotlin", flashcardsJson, TopicStatus.DONE)
+        val entity = TopicEntity("1", "Kotlin", flashcardsJson)
         every { topicDao.getAll() } returns flowOf(listOf(entity))
 
         val topics = repository.getStoredTopics().first()
@@ -88,56 +89,43 @@ class TopicRepositoryImplTest {
     }
 
     @Test
-    fun `generateFlashcards success returns topic and inserts to DB`() = runTest {
-        coEvery { geminiService.generateContent(any()) } returns "P: What is Kotlin? | R: A JVM language"
+    fun `createTopic inserts an empty topic without calling the network`() = runTest {
+        val topic = repository.createTopic("História do Brasil")
 
-        val results = repository.generateFlashcards("Kotlin").toList()
-
-        assertEquals(1, results.size)
-        val topic = results.first().getOrThrow()
-        assertEquals("Kotlin", topic.name)
-        assertEquals(1, topic.flashcards.size)
-        assertEquals("What is Kotlin?", topic.flashcards[0].question)
-        coVerify(exactly = 1) { topicDao.insert(match<TopicEntity> { it.status == TopicStatus.DONE }) }
+        assertEquals("História do Brasil", topic.name)
+        assertTrue(topic.flashcards.isEmpty())
+        coVerify { topicDao.insert(match<TopicEntity> { it.name == "História do Brasil" }) }
+        coVerify(exactly = 0) { geminiService.generateContent(any()) }
     }
 
     @Test
-    fun `generateFlashcards NoInternet inserts PENDING entity and enqueues WorkManager`() = runTest {
+    fun `generateFlashcards success returns cards and updates DB`() = runTest {
+        coEvery { geminiService.generateContent(any()) } returns "P: What is Kotlin? | R: A JVM language"
+
+        val results = repository.generateFlashcards(topicWithContent()).toList()
+
+        assertEquals(1, results.size)
+        val flashcards = results.first().getOrThrow()
+        assertEquals(1, flashcards.size)
+        assertEquals("What is Kotlin?", flashcards[0].question)
+        coVerify(exactly = 1) { topicDao.updateFlashcards("1", any()) }
+    }
+
+    @Test
+    fun `generateFlashcards failure propagates and does not update DB`() = runTest {
         coEvery { geminiService.generateContent(any()) } throws NetworkError.NoInternet()
 
-        val results = repository.generateFlashcards("Kotlin").toList()
+        val results = repository.generateFlashcards(topicWithContent()).toList()
 
         assertTrue(results.first().isFailure)
         assertIs<NetworkError.NoInternet>(results.first().exceptionOrNull())
-        coVerify { topicDao.insert(match<TopicEntity> { it.status == TopicStatus.PENDING && it.name == "Kotlin" }) }
-        verify { workManager.enqueueUniqueWork(any<String>(), any<ExistingWorkPolicy>(), any<OneTimeWorkRequest>()) }
-    }
-
-    @Test
-    fun `generateFlashcards Timeout inserts PENDING entity and enqueues WorkManager`() = runTest {
-        coEvery { geminiService.generateContent(any()) } throws NetworkError.Timeout()
-
-        val results = repository.generateFlashcards("Kotlin").toList()
-
-        assertTrue(results.first().isFailure)
-        coVerify { topicDao.insert(match<TopicEntity> { it.status == TopicStatus.PENDING }) }
-        verify { workManager.enqueueUniqueWork(any<String>(), any<ExistingWorkPolicy>(), any<OneTimeWorkRequest>()) }
-    }
-
-    @Test
-    fun `generateFlashcards HttpError does not enqueue WorkManager`() = runTest {
-        coEvery { geminiService.generateContent(any()) } throws NetworkError.HttpError(500, "Server Error")
-
-        val results = repository.generateFlashcards("Kotlin").toList()
-
-        assertTrue(results.first().isFailure)
-        verify(exactly = 0) { workManager.enqueueUniqueWork(any<String>(), any<ExistingWorkPolicy>(), any<OneTimeWorkRequest>()) }
+        coVerify(exactly = 0) { topicDao.updateFlashcards(any(), any()) }
     }
 
     @Test
     fun `getTopic maps entity to domain topic`() = runTest {
         val flashcardsJson = Gson().toJson(listOf(Flashcard("Q?", "A")))
-        val entity = TopicEntity("1", "Kotlin", flashcardsJson, TopicStatus.DONE)
+        val entity = TopicEntity("1", "Kotlin", flashcardsJson)
         every { topicDao.getById("1") } returns flowOf(entity)
 
         val topic = repository.getTopic("1").first()
@@ -154,14 +142,5 @@ class TopicRepositoryImplTest {
         val topic = repository.getTopic("missing").first()
 
         kotlin.test.assertNull(topic)
-    }
-
-    @Test
-    fun `generateFlashcards includes topic name in DB insert on success`() = runTest {
-        coEvery { geminiService.generateContent(any()) } returns "P: Q? | R: A"
-
-        repository.generateFlashcards("História do Brasil").toList()
-
-        coVerify { topicDao.insert(match<TopicEntity> { it.name == "História do Brasil" }) }
     }
 }

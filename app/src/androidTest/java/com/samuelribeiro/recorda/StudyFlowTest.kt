@@ -14,8 +14,8 @@ import androidx.work.WorkManager
 import com.samuelribeiro.recorda.data.source.local.AppDatabase
 import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.data.source.local.TopicEntity
-import com.samuelribeiro.recorda.data.source.local.TopicStatus
-import com.samuelribeiro.recorda.presentation.ui.topic.composables.TOPIC_STUDY_AREA_TEST_TAG
+import com.samuelribeiro.recorda.presentation.ui.topic.composables.TOPIC_ITEM_TEST_TAG
+import com.samuelribeiro.recorda.presentation.ui.topichub.composables.HUB_STUDY_TEST_TAG
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking
@@ -116,7 +116,6 @@ class StudyFlowTest {
                 id = "e2e-study-topic",
                 name = topicName,
                 flashcardsJson = """[{"question":"O que é Kotlin?","answer":"Linguagem JVM moderna"}]""",
-                status = TopicStatus.DONE,
                 studyGuideJson = studyGuideJson,
             )
         )
@@ -124,11 +123,17 @@ class StudyFlowTest {
 
     private fun openStudyScreen() {
         composeRule.waitUntil(timeoutMillis = 5_000L) {
-            composeRule.onAllNodesWithTag(TOPIC_STUDY_AREA_TEST_TAG)
+            composeRule.onAllNodesWithTag(TOPIC_ITEM_TEST_TAG)
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
-        composeRule.onNodeWithTag(TOPIC_STUDY_AREA_TEST_TAG).performClick()
+        composeRule.onNodeWithTag(TOPIC_ITEM_TEST_TAG).performClick()
+        composeRule.waitUntil(timeoutMillis = 5_000L) {
+            composeRule.onAllNodesWithTag(HUB_STUDY_TEST_TAG)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        composeRule.onNodeWithTag(HUB_STUDY_TEST_TAG).performClick()
         composeRule.waitUntil(timeoutMillis = 5_000L) {
             composeRule.onAllNodesWithText(sectionTitle)
                 .fetchSemanticsNodes()

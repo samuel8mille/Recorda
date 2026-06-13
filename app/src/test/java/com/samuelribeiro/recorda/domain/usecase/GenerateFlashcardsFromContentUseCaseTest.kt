@@ -12,21 +12,21 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import kotlin.test.assertEquals
 
-class GenerateFlashcardsUseCaseTest {
+class GenerateFlashcardsFromContentUseCaseTest {
 
     private val repository: TopicRepository = mockk()
-    private val useCase = GenerateFlashcardsUseCase(repository)
+    private val useCase = GenerateFlashcardsFromContentUseCase(repository)
+    private val topic = Topic("1", "Kotlin", emptyList())
 
     @Test
     fun `invoke delegates to repository`() = runTest {
-        val topic = Topic("1", "Kotlin", listOf(Flashcard("Q?", "A")))
-        every { repository.generateFlashcards("Kotlin") } returns flowOf(Result.success(topic))
+        val cards = listOf(Flashcard("Q?", "A"))
+        every { repository.generateFlashcards(topic) } returns flowOf(Result.success(cards))
 
-        val results = useCase("Kotlin").toList()
+        val results = useCase(topic).toList()
 
-        verify(exactly = 1) { repository.generateFlashcards("Kotlin") }
-        assertEquals(1, results.size)
-        assertEquals(topic, results.first().getOrThrow())
+        verify(exactly = 1) { repository.generateFlashcards(topic) }
+        assertEquals(cards, results.first().getOrThrow())
     }
 
     @Test
@@ -34,7 +34,7 @@ class GenerateFlashcardsUseCaseTest {
         val error = RuntimeException("network fail")
         every { repository.generateFlashcards(any()) } returns flowOf(Result.failure(error))
 
-        val results = useCase("Kotlin").toList()
+        val results = useCase(topic).toList()
 
         assertEquals(error, results.first().exceptionOrNull())
     }

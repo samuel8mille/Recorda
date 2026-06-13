@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:dist="http://schemas.android.com/apk/distribution">
+
+    <!--
+    Módulo dinâmico da tela de conteúdo, com entrega install-time (sempre instalado
+    junto com o APK base), seguindo o mesmo padrão de :feature:study.
+    -->
+    <dist:module
+        dist:instant="false"
+        dist:title="@string/title_content">
+        <dist:delivery>
+            <dist:install-time />
+        </dist:delivery>
+        <dist:fusing dist:include="true" />
+    </dist:module>
+
+    <application>
+        <!--
+        Registers ContentScreen into ContentSessionEntry before Application.onCreate().
+        This lets :app navigate to ContentScreen without importing it directly,
+        preserving the dynamic-feature dependency direction.
+        -->
+        <provider
+            android:name=".ContentSessionInitProvider"
+            android:authorities="${applicationId}.content_init"
+            android:exported="false" />
+    </application>
+
+</manifest>

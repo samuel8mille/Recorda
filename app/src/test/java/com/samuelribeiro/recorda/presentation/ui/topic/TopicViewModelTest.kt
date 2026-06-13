@@ -1,14 +1,12 @@
 package com.samuelribeiro.recorda.presentation.ui.topic
 
-import app.cash.turbine.test
 import com.samuelribeiro.recorda.analytics.AnalyticsEvent
 import com.samuelribeiro.recorda.analytics.AnalyticsTracker
-import com.samuelribeiro.recorda.core.network.NetworkError
 import com.samuelribeiro.recorda.domain.model.Flashcard
 import com.samuelribeiro.recorda.domain.model.Topic
 import com.samuelribeiro.recorda.domain.repository.TopicRepository
+import com.samuelribeiro.recorda.domain.usecase.CreateTopicUseCase
 import com.samuelribeiro.recorda.domain.usecase.DeleteTopicUseCase
-import com.samuelribeiro.recorda.domain.usecase.GenerateFlashcardsUseCase
 import com.samuelribeiro.recorda.domain.usecase.GetStoredTopicsUseCase
 import com.samuelribeiro.recorda.logging.CrashReporter
 import com.samuelribeiro.recorda.util.MainDispatcherRule
@@ -24,7 +22,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -39,7 +36,7 @@ class TopicViewModelTest {
     private val crashReporter: CrashReporter = mockk(relaxed = true)
     private val deleteTopicUseCase: DeleteTopicUseCase = mockk()
 
-    private val generateFlashcardsUseCase = GenerateFlashcardsUseCase(repository)
+    private val createTopicUseCase = CreateTopicUseCase(repository)
     private val getStoredTopicsUseCase = GetStoredTopicsUseCase(repository)
 
     private val topic = Topic(id = "1", name = "Kotlin", flashcards = listOf(Flashcard("Q?", "A")))
@@ -48,13 +45,14 @@ class TopicViewModelTest {
     fun setUp() {
         every { repository.getStoredTopics() } returns flowOf(emptyList())
         coEvery { deleteTopicUseCase(any()) } returns Unit
+        coEvery { repository.createTopic(any()) } answers { Topic("new", firstArg(), emptyList()) }
     }
 
     private fun createViewModel(existingTopics: List<Topic> = emptyList()): TopicViewModel {
         every { repository.getStoredTopics() } returns flowOf(existingTopics)
         return TopicViewModel(
             initialState = TopicUiState(),
-            generateFlashcardsUseCase = generateFlashcardsUseCase,
+            createTopicUseCase = createTopicUseCase,
             getStoredTopicsUseCase = getStoredTopicsUseCase,
             deleteTopicUseCase = deleteTopicUseCase,
             analyticsTracker = analyticsTracker,
@@ -74,7 +72,7 @@ class TopicViewModelTest {
     fun `empty topic sets inputError and tracks EmptyTopicSubmitted`() = runTest {
         val vm = createViewModel()
 
-        vm.onSendEvent(OnGenerateFlashcardsClick(""))
+        vm.onSendEvent(OnAddTopicClick(""))
 
         assertNotNull(vm.stateFlow.value.content.inputError)
         verify { analyticsTracker.track(AnalyticsEvent.EmptyTopicSubmitted) }
@@ -84,7 +82,7 @@ class TopicViewModelTest {
     fun `whitespace-only topic is treated as empty`() = runTest {
         val vm = createViewModel()
 
-        vm.onSendEvent(OnGenerateFlashcardsClick("   "))
+        vm.onSendEvent(OnAddTopicClick("   "))
 
         assertNotNull(vm.stateFlow.value.content.inputError)
         verify { analyticsTracker.track(AnalyticsEvent.EmptyTopicSubmitted) }
@@ -94,7 +92,7 @@ class TopicViewModelTest {
     fun `duplicate topic sets inputError and tracks DuplicateTopicSubmitted`() = runTest {
         val vm = createViewModel(existingTopics = listOf(topic))
 
-        vm.onSendEvent(OnGenerateFlashcardsClick("Kotlin"))
+        vm.onSendEvent(OnAddTopicClick("Kotlin"))
 
         assertNotNull(vm.stateFlow.value.content.inputError)
         verify { analyticsTracker.track(AnalyticsEvent.DuplicateTopicSubmitted) }
@@ -104,144 +102,41 @@ class TopicViewModelTest {
     fun `duplicate check is case-insensitive`() = runTest {
         val vm = createViewModel(existingTopics = listOf(topic))
 
-        vm.onSendEvent(OnGenerateFlashcardsClick("KOTLIN"))
+        vm.onSendEvent(OnAddTopicClick("KOTLIN"))
 
         assertNotNull(vm.stateFlow.value.content.inputError)
         verify { analyticsTracker.track(AnalyticsEvent.DuplicateTopicSubmitted) }
     }
 
     @Test
-    fun `successful generation clears error and tracks FlashcardsGenerated`() = runTest {
-        every { repository.generateFlashcards("Kotlin") } returns flowOf(Result.success(topic))
+    fun `valid topic creates it instantly and tracks TopicCreated`() = runTest {
         val vm = createViewModel()
 
-        vm.onSendEvent(OnGenerateFlashcardsClick("Kotlin"))
+        vm.onSendEvent(OnAddTopicClick("Kotlin"))
 
         assertNull(vm.stateFlow.value.content.inputError)
         assertNull(vm.stateFlow.value.loading)
-        verify { analyticsTracker.track(AnalyticsEvent.FlashcardsGenerated(topic.flashcards.size)) }
+        coVerify { repository.createTopic("Kotlin") }
+        verify { analyticsTracker.track(AnalyticsEvent.TopicCreated) }
     }
 
     @Test
-    fun `successful generation trims whitespace from topic name`() = runTest {
-        every { repository.generateFlashcards("Kotlin") } returns flowOf(Result.success(topic))
+    fun `creation trims whitespace from topic name`() = runTest {
         val vm = createViewModel()
 
-        vm.onSendEvent(OnGenerateFlashcardsClick("  Kotlin  "))
+        vm.onSendEvent(OnAddTopicClick("  Kotlin  "))
 
-        verify { repository.generateFlashcards("Kotlin") }
-    }
-
-    @Test
-    fun `NoInternet error emits ShowError and tracks TopicQueuedOffline`() = runTest {
-        val error = NetworkError.NoInternet()
-        every { repository.generateFlashcards(any()) } returns flowOf(Result.failure(error))
-        val vm = createViewModel()
-
-        vm.effectFlow.test {
-            vm.onSendEvent(OnGenerateFlashcardsClick("Kotlin"))
-            assertIs<ShowError>(awaitItem())
-            cancelAndIgnoreRemainingEvents()
-        }
-
-        verify { analyticsTracker.track(AnalyticsEvent.TopicQueuedOffline) }
-        coVerify(exactly = 0) { analyticsTracker.track(match { it is AnalyticsEvent.FlashcardsGenerationFailed }) }
-    }
-
-    @Test
-    fun `Timeout error emits ShowError and tracks FlashcardsGenerationFailed`() = runTest {
-        val error = NetworkError.Timeout()
-        every { repository.generateFlashcards(any()) } returns flowOf(Result.failure(error))
-        val vm = createViewModel()
-
-        vm.effectFlow.test {
-            vm.onSendEvent(OnGenerateFlashcardsClick("Kotlin"))
-            val effect = awaitItem()
-            assertIs<ShowError>(effect)
-            cancelAndIgnoreRemainingEvents()
-        }
-
-        verify { analyticsTracker.track(AnalyticsEvent.FlashcardsGenerationFailed("timeout")) }
-    }
-
-    @Test
-    fun `HttpError emits ShowError and tracks FlashcardsGenerationFailed with code`() = runTest {
-        val error = NetworkError.HttpError(404, "Not Found")
-        every { repository.generateFlashcards(any()) } returns flowOf(Result.failure(error))
-        val vm = createViewModel()
-
-        vm.effectFlow.test {
-            vm.onSendEvent(OnGenerateFlashcardsClick("Kotlin"))
-            assertIs<ShowError>(awaitItem())
-            cancelAndIgnoreRemainingEvents()
-        }
-
-        verify { analyticsTracker.track(AnalyticsEvent.FlashcardsGenerationFailed("http_404")) }
-    }
-
-    @Test
-    fun `EmptyResponse error emits ShowError and tracks FlashcardsGenerationFailed`() = runTest {
-        val error = NetworkError.EmptyResponse()
-        every { repository.generateFlashcards(any()) } returns flowOf(Result.failure(error))
-        val vm = createViewModel()
-
-        vm.effectFlow.test {
-            vm.onSendEvent(OnGenerateFlashcardsClick("Kotlin"))
-            assertIs<ShowError>(awaitItem())
-            cancelAndIgnoreRemainingEvents()
-        }
-
-        verify { analyticsTracker.track(AnalyticsEvent.FlashcardsGenerationFailed("empty_response")) }
-    }
-
-    @Test
-    fun `unknown error emits ShowError and tracks FlashcardsGenerationFailed with unknown type`() = runTest {
-        val error = RuntimeException("unexpected")
-        every { repository.generateFlashcards(any()) } returns flowOf(Result.failure(error))
-        val vm = createViewModel()
-
-        vm.effectFlow.test {
-            vm.onSendEvent(OnGenerateFlashcardsClick("Kotlin"))
-            assertIs<ShowError>(awaitItem())
-            cancelAndIgnoreRemainingEvents()
-        }
-
-        verify { analyticsTracker.track(AnalyticsEvent.FlashcardsGenerationFailed("unknown")) }
-    }
-
-    @Test
-    fun `generation shows loading then hides it on completion`() = runTest {
-        every { repository.generateFlashcards(any()) } returns flowOf(Result.success(topic))
-        val vm = createViewModel()
-
-        vm.onSendEvent(OnGenerateFlashcardsClick("Kotlin"))
-
-        assertNull(vm.stateFlow.value.loading)
-    }
-
-    @Test
-    fun `successful generation emits NavigateToReview effect with topic id`() = runTest {
-        every { repository.generateFlashcards("Kotlin") } returns flowOf(Result.success(topic))
-        val vm = createViewModel()
-
-        vm.effectFlow.test {
-            vm.onSendEvent(OnGenerateFlashcardsClick("Kotlin"))
-            val effect = awaitItem()
-            assertIs<NavigateToReview>(effect)
-            kotlin.test.assertEquals(topic.id, effect.topicId)
-            cancelAndIgnoreRemainingEvents()
-        }
+        coVerify { repository.createTopic("Kotlin") }
     }
 
     @Test
     fun `valid submission clears previous inputError`() = runTest {
-        every { repository.generateFlashcards("Kotlin") } returns flowOf(Result.success(topic))
         val vm = createViewModel()
 
-        vm.onSendEvent(OnGenerateFlashcardsClick(""))
+        vm.onSendEvent(OnAddTopicClick(""))
         assertNotNull(vm.stateFlow.value.content.inputError)
 
-        vm.onSendEvent(OnGenerateFlashcardsClick("Kotlin"))
+        vm.onSendEvent(OnAddTopicClick("Kotlin"))
         assertNull(vm.stateFlow.value.content.inputError)
     }
 

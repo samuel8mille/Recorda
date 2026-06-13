@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.samuelribeiro.recorda.presentation.ui.content.ContentViewModel
 import com.samuelribeiro.recorda.presentation.ui.mindmap.MindMapViewModel
 import com.samuelribeiro.recorda.presentation.ui.review.ReviewViewModel
 import com.samuelribeiro.recorda.presentation.ui.stats.StatsViewModel
@@ -13,6 +14,8 @@ import com.samuelribeiro.recorda.presentation.ui.study.StudyViewModel
 import com.samuelribeiro.recorda.presentation.ui.topic.TopicUiState
 import com.samuelribeiro.recorda.presentation.ui.topic.TopicViewModel
 import com.samuelribeiro.recorda.presentation.ui.topic.composables.TopicScreen
+import com.samuelribeiro.recorda.presentation.ui.topichub.TopicHubViewModel
+import com.samuelribeiro.recorda.presentation.ui.topichub.composables.TopicHubScreen
 import com.samuelribeiro.recorda.presentation.utils.getViewModel
 
 @Composable
@@ -24,11 +27,36 @@ fun AppNavGraph(navController: NavHostController) {
             }
             TopicScreen(
                 viewModel = viewModel,
-                onNavigateToReview = { topicId -> navController.navigate(AppRoute.review(topicId)) },
-                onNavigateToMindMap = { topicId -> navController.navigate(AppRoute.mindMap(topicId)) },
-                onNavigateToStudy = { topicId -> navController.navigate(AppRoute.study(topicId)) },
-                onNavigateToStats = { topicId -> navController.navigate(AppRoute.stats(topicId)) },
+                onNavigateToTopicHub = { topicId -> navController.navigate(AppRoute.topicHub(topicId)) },
             )
+        }
+        composable(
+            route = AppRoute.TOPIC_HUB,
+            arguments = listOf(navArgument("topicId") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val topicId = checkNotNull(backStackEntry.arguments?.getString("topicId"))
+            val viewModel = getViewModel<TopicHubViewModel, TopicHubViewModel.ViewModelFactory> { factory ->
+                factory.create(topicId)
+            }
+            TopicHubScreen(
+                viewModel = viewModel,
+                onNavigateToContent = { navController.navigate(AppRoute.content(topicId)) },
+                onNavigateToStudy = { navController.navigate(AppRoute.study(topicId)) },
+                onNavigateToMindMap = { navController.navigate(AppRoute.mindMap(topicId)) },
+                onNavigateToReview = { navController.navigate(AppRoute.review(topicId)) },
+                onNavigateToStats = { navController.navigate(AppRoute.stats(topicId)) },
+                onNavigateBack = { navController.popBackStack() },
+            )
+        }
+        composable(
+            route = AppRoute.CONTENT,
+            arguments = listOf(navArgument("topicId") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val topicId = checkNotNull(backStackEntry.arguments?.getString("topicId"))
+            val viewModel = getViewModel<ContentViewModel, ContentViewModel.ViewModelFactory> { factory ->
+                factory.create(topicId)
+            }
+            ContentSessionEntry.content(viewModel) { navController.popBackStack() }
         }
         composable(
             route = AppRoute.REVIEW,

@@ -30,7 +30,7 @@ class MindMapRepositoryImpl @Inject constructor(
 
     override fun generateMindMap(topic: Topic): Flow<Result<MindMapNode>> =
         serviceExecutor.execute(isIdempotent = false) {
-            geminiService.generateContent(promptBuilder.build(topic.name, topic.flashcards))
+            geminiService.generateContent(promptBuilder.build(topic.name, topic.content?.asPromptSummary().orEmpty()))
         }.map { result ->
             result.map { rawText ->
                 val node = mindMapMapper.toMindMap(topic.name, rawText)

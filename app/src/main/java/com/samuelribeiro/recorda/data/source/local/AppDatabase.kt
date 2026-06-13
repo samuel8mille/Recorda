@@ -6,7 +6,7 @@ import androidx.room.RoomDatabase
 /** Room database for the Recorda app. */
 @Database(
     entities = [TopicEntity::class, FlashcardReviewEntity::class, ReviewLogEntity::class],
-    version = 5,
+    version = 6,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {

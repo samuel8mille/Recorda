@@ -12,6 +12,8 @@ interface FlashcardPromptBuilder {
      * Returns the full prompt string to be sent to the LLM for [topicName].
      *
      * @param topicName The study topic entered by the user.
+     * @param contentSummary Compact summary of the topic's chapter content the flashcards
+     *   should be derived from.
      */
-    fun build(topicName: String): String
+    fun build(topicName: String, contentSummary: String): String
 }

@@ -2,12 +2,13 @@ package com.samuelribeiro.recorda.data.mapper
 
 import com.google.gson.Gson
 import com.samuelribeiro.recorda.data.source.local.TopicEntity
-import com.samuelribeiro.recorda.data.source.local.TopicStatus
+import com.samuelribeiro.recorda.domain.model.Chapter
 import com.samuelribeiro.recorda.domain.model.Flashcard
 import com.samuelribeiro.recorda.domain.model.MindMapNode
 import com.samuelribeiro.recorda.domain.model.StudyGuide
 import com.samuelribeiro.recorda.domain.model.StudySection
 import com.samuelribeiro.recorda.domain.model.Topic
+import com.samuelribeiro.recorda.domain.model.TopicContent
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -24,7 +25,7 @@ class TopicEntityMapperTest {
     @Test
     fun `toDomain maps entity fields correctly`() {
         val json = gson.toJson(flashcards)
-        val entity = TopicEntity(id = "abc", name = "Kotlin", flashcardsJson = json, status = TopicStatus.DONE)
+        val entity = TopicEntity(id = "abc", name = "Kotlin", flashcardsJson = json)
 
         val result = mapper.toDomain(entity)
 
@@ -37,7 +38,7 @@ class TopicEntityMapperTest {
 
     @Test
     fun `toDomain returns empty flashcards for blank json`() {
-        val entity = TopicEntity(id = "1", name = "Test", flashcardsJson = "", status = TopicStatus.PENDING)
+        val entity = TopicEntity(id = "1", name = "Test", flashcardsJson = "")
 
         val result = mapper.toDomain(entity)
 
@@ -45,20 +46,12 @@ class TopicEntityMapperTest {
     }
 
     @Test
-    fun `toEntity maps topic fields correctly with DONE status`() {
+    fun `toEntity maps topic fields correctly`() {
         val entity = mapper.toEntity(topic)
 
         assertEquals("abc", entity.id)
         assertEquals("Kotlin", entity.name)
-        assertEquals(TopicStatus.DONE, entity.status)
         assertTrue(entity.flashcardsJson.contains("What is Kotlin?"))
-    }
-
-    @Test
-    fun `toEntity uses provided status`() {
-        val entity = mapper.toEntity(topic, status = TopicStatus.PENDING)
-
-        assertEquals(TopicStatus.PENDING, entity.status)
     }
 
     @Test
@@ -70,8 +63,31 @@ class TopicEntityMapperTest {
     }
 
     @Test
+    fun `toDomain returns null content for blank json`() {
+        val entity = TopicEntity(id = "1", name = "Test", flashcardsJson = "")
+
+        val result = mapper.toDomain(entity)
+
+        assertNull(result.content)
+    }
+
+    @Test
+    fun `round-trip preserves content`() {
+        val content = TopicContent(
+            chapters = listOf(Chapter(id = "0", title = "Intro", summary = "Resumo", body = "Corpo completo")),
+        )
+        val topicWithContent = topic.copy(content = content)
+
+        val entity = mapper.toEntity(topicWithContent)
+        val restored = mapper.toDomain(entity)
+
+        assertEquals(topicWithContent, restored)
+        assertEquals(content, restored.content)
+    }
+
+    @Test
     fun `toDomain returns null mindMap for blank json`() {
-        val entity = TopicEntity(id = "1", name = "Test", flashcardsJson = "", status = TopicStatus.PENDING)
+        val entity = TopicEntity(id = "1", name = "Test", flashcardsJson = "")
 
         val result = mapper.toDomain(entity)
 
@@ -92,7 +108,7 @@ class TopicEntityMapperTest {
 
     @Test
     fun `toDomain returns null study guide for blank json`() {
-        val entity = TopicEntity(id = "1", name = "Test", flashcardsJson = "", status = TopicStatus.PENDING)
+        val entity = TopicEntity(id = "1", name = "Test", flashcardsJson = "")
 
         val result = mapper.toDomain(entity)
 
