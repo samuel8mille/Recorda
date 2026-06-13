@@ -29,7 +29,7 @@ class TopicHubViewModel @AssistedInject constructor(
 
     /** Hilt assisted-inject factory for creating [TopicHubViewModel] with [topicId]. */
     @AssistedFactory
-    interface ViewModelFactory {
+    fun interface ViewModelFactory {
         /** Creates a [TopicHubViewModel] scoped to [topicId]. */
         fun create(topicId: String): TopicHubViewModel
     }

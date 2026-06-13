@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Contract for generating and caching the long-form chapter content of a topic.
  */
-interface TopicContentRepository {
+fun interface TopicContentRepository {
 
     /**
      * Generates (or resumes) the chapter content of [topic], persisting each step.

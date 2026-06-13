@@ -47,7 +47,7 @@ class ContentViewModel @AssistedInject constructor(
 
     /** Hilt assisted-inject factory for creating [ContentViewModel] with [topicId]. */
     @AssistedFactory
-    interface ViewModelFactory {
+    fun interface ViewModelFactory {
         /** Creates a [ContentViewModel] scoped to [topicId]. */
         fun create(topicId: String): ContentViewModel
     }
