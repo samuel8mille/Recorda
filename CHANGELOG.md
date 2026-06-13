@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
+### Documentation
+
+- **readme**: Documentar workaround para rodar testes instrumentados localmente
+- **readme**: Adicionar tela de estudo por tema como próximo item do roadmap
+- **readme**: Marcar tela de estudo como concluída e listar :feature:study
+
+### Features
+
+- **review**: Adicionar testes orais com SpeechRecognizer e avaliação via Gemini (M17)
+- **mind-map**: Adicionar geração de mapa mental via Gemini (M18)
+- **study**: Adicionar tela de estudo por tema com guia gerado via Gemini (M19)
+- **study**: Adicionar definição e conteúdo completo às seções do guia
+- **theme**: Aplicar paleta vibrante Foco Elétrico
+- **stats**: Adicionar estatísticas de retenção por tema (M20)
+- **content**: Reestruturar app com hub do tópico e feature de Conteúdo por capítulos (M21)
+
+### Build
+
+- **app**: Adicionar task connectedTestWithFeatures para testes instrumentados locais
+## [0.0.2] - 2026-06-10
+
 ### Bug Fixes
 
 - **test**: Inicializar WorkManager antes do launch da activity nos testes E2E
