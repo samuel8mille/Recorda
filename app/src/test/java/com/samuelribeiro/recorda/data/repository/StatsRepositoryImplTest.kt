@@ -2,6 +2,10 @@ package com.samuelribeiro.recorda.data.repository
 
 import com.samuelribeiro.recorda.data.source.local.ReviewLogDao
 import com.samuelribeiro.recorda.data.source.local.ReviewLogEntity
+import com.samuelribeiro.recorda.data.sync.DeleteReviewLogPayload
+import com.samuelribeiro.recorda.data.sync.LogReviewPayload
+import com.samuelribeiro.recorda.data.sync.SyncCommandDispatcher
+import com.samuelribeiro.recorda.data.sync.SyncCommandType
 import com.samuelribeiro.recorda.domain.model.CardRating
 import com.samuelribeiro.recorda.domain.model.ReviewLogEntry
 import io.mockk.coEvery
@@ -14,7 +18,8 @@ import kotlin.test.assertEquals
 class StatsRepositoryImplTest {
 
     private val reviewLogDao: ReviewLogDao = mockk(relaxed = true)
-    private val repository = StatsRepositoryImpl(reviewLogDao)
+    private val syncCommandDispatcher: SyncCommandDispatcher = mockk(relaxed = true)
+    private val repository = StatsRepositoryImpl(reviewLogDao, syncCommandDispatcher)
 
     @Test
     fun `logReview persists entity with rating name`() = runTest {
@@ -23,6 +28,21 @@ class StatsRepositoryImplTest {
         coVerify {
             reviewLogDao.insert(
                 match {
+                    it.topicId == "topic1" && it.cardIndex == 3 && it.rating == "EASY" && it.timestampMillis == 123L
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `logReview enqueues a LOG_REVIEW sync command`() = runTest {
+        repository.logReview("topic1", ReviewLogEntry(cardIndex = 3, rating = CardRating.EASY, timestampMillis = 123L))
+
+        coVerify {
+            syncCommandDispatcher.enqueue(
+                SyncCommandType.LOG_REVIEW,
+                any(),
+                match<LogReviewPayload> {
                     it.topicId == "topic1" && it.cardIndex == 3 && it.rating == "EASY" && it.timestampMillis == 123L
                 },
             )
@@ -52,5 +72,18 @@ class StatsRepositoryImplTest {
         repository.deleteReviewLog("topic1")
 
         coVerify { reviewLogDao.deleteByTopicId("topic1") }
+    }
+
+    @Test
+    fun `deleteReviewLog enqueues a DELETE_REVIEW_LOG sync command`() = runTest {
+        repository.deleteReviewLog("topic1")
+
+        coVerify {
+            syncCommandDispatcher.enqueue(
+                SyncCommandType.DELETE_REVIEW_LOG,
+                "topic1",
+                DeleteReviewLogPayload("topic1"),
+            )
+        }
     }
 }

@@ -5,6 +5,9 @@ import com.samuelribeiro.recorda.core.network.ServiceExecutor
 import com.samuelribeiro.recorda.data.mapper.TopicContentMapper
 import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.data.source.remote.service.GeminiService
+import com.samuelribeiro.recorda.data.sync.SyncCommandDispatcher
+import com.samuelribeiro.recorda.data.sync.SyncCommandType
+import com.samuelribeiro.recorda.data.sync.UpsertTopicContentPayload
 import com.samuelribeiro.recorda.domain.model.Chapter
 import com.samuelribeiro.recorda.domain.model.Topic
 import com.samuelribeiro.recorda.domain.model.TopicContent
@@ -32,6 +35,7 @@ class TopicContentRepositoryImpl @Inject constructor(
     private val serviceExecutor: ServiceExecutor,
     private val topicDao: TopicDao,
     private val gson: Gson,
+    private val syncCommandDispatcher: SyncCommandDispatcher,
 ) : TopicContentRepository {
 
     override fun generateTopicContent(topic: Topic): Flow<Result<TopicContentStep>> = flow {
@@ -77,6 +81,13 @@ class TopicContentRepositoryImpl @Inject constructor(
         }.first().map(topicContentMapper::toChapterBody)
 
     private suspend fun persist(topicId: String, content: TopicContent) {
-        topicDao.updateContent(topicId, gson.toJson(content))
+        val contentJson = gson.toJson(content)
+        val updatedAtMillis = System.currentTimeMillis()
+        topicDao.updateContent(topicId, contentJson, updatedAtMillis)
+        syncCommandDispatcher.enqueue(
+            SyncCommandType.UPSERT_TOPIC_CONTENT,
+            topicId,
+            UpsertTopicContentPayload(topicId, contentJson, updatedAtMillis),
+        )
     }
 }

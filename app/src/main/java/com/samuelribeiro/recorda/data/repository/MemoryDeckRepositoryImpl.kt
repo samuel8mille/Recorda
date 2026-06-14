@@ -5,6 +5,9 @@ import com.samuelribeiro.recorda.core.network.ServiceExecutor
 import com.samuelribeiro.recorda.data.mapper.MemoryDeckMapper
 import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.data.source.remote.service.GeminiService
+import com.samuelribeiro.recorda.data.sync.SyncCommandDispatcher
+import com.samuelribeiro.recorda.data.sync.SyncCommandType
+import com.samuelribeiro.recorda.data.sync.UpsertTopicMemoryCardsPayload
 import com.samuelribeiro.recorda.domain.model.MemoryDeck
 import com.samuelribeiro.recorda.domain.model.Topic
 import com.samuelribeiro.recorda.domain.prompt.MemoryDeckPromptBuilder
@@ -26,6 +29,7 @@ class MemoryDeckRepositoryImpl @Inject constructor(
     private val topicDao: TopicDao,
     private val gson: Gson,
     private val promptBuilder: MemoryDeckPromptBuilder,
+    private val syncCommandDispatcher: SyncCommandDispatcher,
 ) : MemoryDeckRepository {
 
     override fun generateMemoryDeck(topic: Topic): Flow<Result<MemoryDeck>> =
@@ -34,7 +38,14 @@ class MemoryDeckRepositoryImpl @Inject constructor(
         }.map { result ->
             result.map { rawText ->
                 val deck = memoryDeckMapper.toMemoryDeck(rawText)
-                topicDao.updateMemoryCards(topic.id, gson.toJson(deck))
+                val memoryCardsJson = gson.toJson(deck)
+                val updatedAtMillis = System.currentTimeMillis()
+                topicDao.updateMemoryCards(topic.id, memoryCardsJson, updatedAtMillis)
+                syncCommandDispatcher.enqueue(
+                    SyncCommandType.UPSERT_TOPIC_MEMORY_CARDS,
+                    topic.id,
+                    UpsertTopicMemoryCardsPayload(topic.id, memoryCardsJson, updatedAtMillis),
+                )
                 deck
             }
         }

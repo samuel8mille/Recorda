@@ -5,6 +5,11 @@ import com.samuelribeiro.recorda.data.mapper.FlashcardMapper
 import com.samuelribeiro.recorda.data.mapper.TopicEntityMapper
 import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.data.source.remote.service.GeminiService
+import com.samuelribeiro.recorda.data.sync.CreateTopicPayload
+import com.samuelribeiro.recorda.data.sync.DeleteTopicPayload
+import com.samuelribeiro.recorda.data.sync.SyncCommandDispatcher
+import com.samuelribeiro.recorda.data.sync.SyncCommandType
+import com.samuelribeiro.recorda.data.sync.UpsertTopicFlashcardsPayload
 import com.samuelribeiro.recorda.domain.model.Flashcard
 import com.samuelribeiro.recorda.domain.model.Topic
 import com.samuelribeiro.recorda.domain.prompt.FlashcardPromptBuilder
@@ -31,6 +36,7 @@ class TopicRepositoryImpl @Inject constructor(
     private val topicDao: TopicDao,
     private val gson: Gson,
     private val promptBuilder: FlashcardPromptBuilder,
+    private val syncCommandDispatcher: SyncCommandDispatcher,
 ) : TopicRepository {
 
     override fun getStoredTopics(): Flow<List<Topic>> =
@@ -41,6 +47,7 @@ class TopicRepositoryImpl @Inject constructor(
 
     override suspend fun deleteTopic(id: String) {
         topicDao.deleteById(id)
+        syncCommandDispatcher.enqueue(SyncCommandType.DELETE_TOPIC, id, DeleteTopicPayload(id))
     }
 
     override suspend fun createTopic(name: String): Topic {
@@ -50,6 +57,11 @@ class TopicRepositoryImpl @Inject constructor(
             flashcards = emptyList(),
         )
         topicDao.insert(topicEntityMapper.toEntity(topic))
+        syncCommandDispatcher.enqueue(
+            SyncCommandType.CREATE_TOPIC,
+            topic.id,
+            CreateTopicPayload(topic.id, topic.name),
+        )
         return topic
     }
 
@@ -60,7 +72,14 @@ class TopicRepositoryImpl @Inject constructor(
         }.map { result ->
             result.map { rawText ->
                 val flashcards = flashcardMapper.toFlashcards(rawText)
-                topicDao.updateFlashcards(topic.id, gson.toJson(flashcards))
+                val flashcardsJson = gson.toJson(flashcards)
+                val updatedAtMillis = System.currentTimeMillis()
+                topicDao.updateFlashcards(topic.id, flashcardsJson, updatedAtMillis)
+                syncCommandDispatcher.enqueue(
+                    SyncCommandType.UPSERT_TOPIC_FLASHCARDS,
+                    topic.id,
+                    UpsertTopicFlashcardsPayload(topic.id, flashcardsJson, updatedAtMillis),
+                )
                 flashcards
             }
         }

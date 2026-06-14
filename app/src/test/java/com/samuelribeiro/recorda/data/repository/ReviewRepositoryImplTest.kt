@@ -2,6 +2,9 @@ package com.samuelribeiro.recorda.data.repository
 
 import com.samuelribeiro.recorda.data.source.local.FlashcardReviewDao
 import com.samuelribeiro.recorda.data.source.local.FlashcardReviewEntity
+import com.samuelribeiro.recorda.data.sync.SaveReviewStatePayload
+import com.samuelribeiro.recorda.data.sync.SyncCommandDispatcher
+import com.samuelribeiro.recorda.data.sync.SyncCommandType
 import com.samuelribeiro.recorda.domain.model.FlashcardReviewState
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -14,7 +17,8 @@ import kotlin.test.assertEquals
 class ReviewRepositoryImplTest {
 
     private val dao: FlashcardReviewDao = mockk()
-    private val repository = ReviewRepositoryImpl(dao)
+    private val syncCommandDispatcher: SyncCommandDispatcher = mockk(relaxed = true)
+    private val repository = ReviewRepositoryImpl(dao, syncCommandDispatcher)
 
     @Test
     fun `getReviewStates maps entities to domain models`() = runTest {
@@ -85,6 +89,24 @@ class ReviewRepositoryImplTest {
         )
 
         coVerify(exactly = 1) { dao.upsert(any()) }
+    }
+
+    @Test
+    fun `saveReviewState enqueues a SAVE_REVIEW_STATE sync command with composite id`() = runTest {
+        coEvery { dao.upsert(any()) } returns Unit
+
+        repository.saveReviewState(
+            topicId = "topic1",
+            state = FlashcardReviewState(cardIndex = 2),
+        )
+
+        coVerify {
+            syncCommandDispatcher.enqueue(
+                SyncCommandType.SAVE_REVIEW_STATE,
+                "topic1_2",
+                match<SaveReviewStatePayload> { it.topicId == "topic1" && it.cardIndex == 2 },
+            )
+        }
     }
 
     @Test

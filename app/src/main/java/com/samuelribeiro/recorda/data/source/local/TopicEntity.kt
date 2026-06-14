@@ -18,4 +18,5 @@ data class TopicEntity(
     val mindMapJson: String? = null,
     val contentJson: String? = null,
     val memoryCardsJson: String? = null,
+    val updatedAtMillis: Long = 0L,
 )

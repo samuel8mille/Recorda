@@ -5,6 +5,9 @@ import com.samuelribeiro.recorda.core.network.ServiceExecutor
 import com.samuelribeiro.recorda.data.mapper.MindMapMapper
 import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.data.source.remote.service.GeminiService
+import com.samuelribeiro.recorda.data.sync.SyncCommandDispatcher
+import com.samuelribeiro.recorda.data.sync.SyncCommandType
+import com.samuelribeiro.recorda.data.sync.UpsertTopicMindMapPayload
 import com.samuelribeiro.recorda.domain.model.MindMapNode
 import com.samuelribeiro.recorda.domain.model.Topic
 import com.samuelribeiro.recorda.domain.prompt.MindMapPromptBuilder
@@ -26,6 +29,7 @@ class MindMapRepositoryImpl @Inject constructor(
     private val topicDao: TopicDao,
     private val gson: Gson,
     private val promptBuilder: MindMapPromptBuilder,
+    private val syncCommandDispatcher: SyncCommandDispatcher,
 ) : MindMapRepository {
 
     override fun generateMindMap(topic: Topic): Flow<Result<MindMapNode>> =
@@ -34,7 +38,14 @@ class MindMapRepositoryImpl @Inject constructor(
         }.map { result ->
             result.map { rawText ->
                 val node = mindMapMapper.toMindMap(topic.name, rawText)
-                topicDao.updateMindMap(topic.id, gson.toJson(node))
+                val mindMapJson = gson.toJson(node)
+                val updatedAtMillis = System.currentTimeMillis()
+                topicDao.updateMindMap(topic.id, mindMapJson, updatedAtMillis)
+                syncCommandDispatcher.enqueue(
+                    SyncCommandType.UPSERT_TOPIC_MIND_MAP,
+                    topic.id,
+                    UpsertTopicMindMapPayload(topic.id, mindMapJson, updatedAtMillis),
+                )
                 node
             }
         }

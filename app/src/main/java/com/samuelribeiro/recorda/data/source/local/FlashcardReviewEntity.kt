@@ -14,4 +14,5 @@ data class FlashcardReviewEntity(
     val intervalDays: Int = 1,
     val repetitions: Int = 0,
     val nextReviewAtMillis: Long = 0L,
+    val updatedAtMillis: Long = 0L,
 )

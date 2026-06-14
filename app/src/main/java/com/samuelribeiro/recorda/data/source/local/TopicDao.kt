@@ -19,20 +19,20 @@ interface TopicDao {
     fun getById(id: String): Flow<TopicEntity?>
 
     /** Persists the generated flashcards for the topic with [id]. */
-    @Query("UPDATE topics SET flashcardsJson = :flashcardsJson WHERE id = :id")
-    suspend fun updateFlashcards(id: String, flashcardsJson: String)
+    @Query("UPDATE topics SET flashcardsJson = :flashcardsJson, updatedAtMillis = :updatedAtMillis WHERE id = :id")
+    suspend fun updateFlashcards(id: String, flashcardsJson: String, updatedAtMillis: Long)
 
     /** Persists the generated mind map for the topic with [id]. */
-    @Query("UPDATE topics SET mindMapJson = :mindMapJson WHERE id = :id")
-    suspend fun updateMindMap(id: String, mindMapJson: String)
+    @Query("UPDATE topics SET mindMapJson = :mindMapJson, updatedAtMillis = :updatedAtMillis WHERE id = :id")
+    suspend fun updateMindMap(id: String, mindMapJson: String, updatedAtMillis: Long)
 
     /** Persists the (possibly partial) chapter content for the topic with [id]. */
-    @Query("UPDATE topics SET contentJson = :contentJson WHERE id = :id")
-    suspend fun updateContent(id: String, contentJson: String)
+    @Query("UPDATE topics SET contentJson = :contentJson, updatedAtMillis = :updatedAtMillis WHERE id = :id")
+    suspend fun updateContent(id: String, contentJson: String, updatedAtMillis: Long)
 
     /** Persists the generated active-recall deck for the topic with [id]. */
-    @Query("UPDATE topics SET memoryCardsJson = :memoryCardsJson WHERE id = :id")
-    suspend fun updateMemoryCards(id: String, memoryCardsJson: String)
+    @Query("UPDATE topics SET memoryCardsJson = :memoryCardsJson, updatedAtMillis = :updatedAtMillis WHERE id = :id")
+    suspend fun updateMemoryCards(id: String, memoryCardsJson: String, updatedAtMillis: Long)
 
     /** Deletes the topic with [id] from the database. */
     @Query("DELETE FROM topics WHERE id = :id")

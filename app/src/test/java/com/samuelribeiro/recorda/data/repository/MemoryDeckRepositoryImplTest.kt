@@ -7,6 +7,9 @@ import com.samuelribeiro.recorda.data.mapper.MemoryDeckMapper
 import com.samuelribeiro.recorda.data.prompt.GeminiMemoryDeckPromptBuilder
 import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.data.source.remote.service.GeminiService
+import com.samuelribeiro.recorda.data.sync.SyncCommandDispatcher
+import com.samuelribeiro.recorda.data.sync.SyncCommandType
+import com.samuelribeiro.recorda.data.sync.UpsertTopicMemoryCardsPayload
 import com.samuelribeiro.recorda.domain.model.Chapter
 import com.samuelribeiro.recorda.domain.model.Topic
 import com.samuelribeiro.recorda.domain.model.TopicContent
@@ -34,6 +37,7 @@ class MemoryDeckRepositoryImplTest {
     private val topicDao: TopicDao = mockk(relaxed = true)
     private val gson = Gson()
     private val promptBuilder = GeminiMemoryDeckPromptBuilder()
+    private val syncCommandDispatcher: SyncCommandDispatcher = mockk(relaxed = true)
     private val serviceExecutor by lazy { ServiceExecutor(ioDispatcher = mainDispatcherRule.testDispatcher) }
 
     private val repository by lazy {
@@ -44,6 +48,7 @@ class MemoryDeckRepositoryImplTest {
             topicDao = topicDao,
             gson = gson,
             promptBuilder = promptBuilder,
+            syncCommandDispatcher = syncCommandDispatcher,
         )
     }
 
@@ -64,7 +69,23 @@ class MemoryDeckRepositoryImplTest {
         val deck = results.first().getOrThrow()
         assertEquals(2, deck.cards.size)
         assertEquals("Célula", deck.cards[0].concept)
-        coVerify { topicDao.updateMemoryCards("1", gson.toJson(deck)) }
+        coVerify { topicDao.updateMemoryCards("1", gson.toJson(deck), any()) }
+    }
+
+    @Test
+    fun `generateMemoryDeck success enqueues an UPSERT_TOPIC_MEMORY_CARDS sync command`() = runTest {
+        coEvery { geminiService.generateContent(any()) } returns
+            "C: Célula | D: Unidade da vida\nC: DNA | D: Molécula da hereditariedade"
+
+        repository.generateMemoryDeck(topic).toList()
+
+        coVerify {
+            syncCommandDispatcher.enqueue(
+                SyncCommandType.UPSERT_TOPIC_MEMORY_CARDS,
+                "1",
+                match<UpsertTopicMemoryCardsPayload> { it.topicId == "1" },
+            )
+        }
     }
 
     @Test
@@ -75,6 +96,9 @@ class MemoryDeckRepositoryImplTest {
 
         assertTrue(results.first().isFailure)
         assertIs<NetworkError.NoInternet>(results.first().exceptionOrNull())
-        coVerify(exactly = 0) { topicDao.updateMemoryCards(any(), any()) }
+        coVerify(exactly = 0) { topicDao.updateMemoryCards(any(), any(), any()) }
+        coVerify(exactly = 0) {
+            syncCommandDispatcher.enqueue(SyncCommandType.UPSERT_TOPIC_MEMORY_CARDS, any(), any())
+        }
     }
 }

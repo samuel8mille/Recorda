@@ -65,7 +65,7 @@ class TopicDaoTest {
     fun updateFlashcards_updates_flashcardsJson() = runBlocking {
         dao.insert(TopicEntity(id = "t1", name = "Kotlin", flashcardsJson = "[]"))
         val json = """[{"question":"O que é Kotlin?","answer":"Linguagem JVM moderna"}]"""
-        dao.updateFlashcards("t1", json)
+        dao.updateFlashcards("t1", json, updatedAtMillis = 0L)
 
         val result = dao.getById("t1").first()
 
@@ -76,7 +76,7 @@ class TopicDaoTest {
     fun updateContent_updates_contentJson() = runBlocking {
         dao.insert(TopicEntity(id = "t1", name = "Kotlin", flashcardsJson = "[]"))
         val json = """{"chapters":[{"id":"0","title":"Intro","summary":"s","body":"corpo"}]}"""
-        dao.updateContent("t1", json)
+        dao.updateContent("t1", json, updatedAtMillis = 0L)
 
         val result = dao.getById("t1").first()
 
@@ -87,7 +87,7 @@ class TopicDaoTest {
     fun updateMindMap_updates_mindMapJson() = runBlocking {
         dao.insert(TopicEntity(id = "t1", name = "Kotlin", flashcardsJson = "[]"))
         val json = """{"id":"0","title":"Kotlin","children":[]}"""
-        dao.updateMindMap("t1", json)
+        dao.updateMindMap("t1", json, updatedAtMillis = 0L)
 
         val result = dao.getById("t1").first()
 
@@ -98,7 +98,7 @@ class TopicDaoTest {
     fun updateMemoryCards_updates_memoryCardsJson() = runBlocking {
         dao.insert(TopicEntity(id = "t1", name = "Kotlin", flashcardsJson = "[]"))
         val json = """{"cards":[{"id":"0","concept":"Célula","definition":"Unidade da vida"}]}"""
-        dao.updateMemoryCards("t1", json)
+        dao.updateMemoryCards("t1", json, updatedAtMillis = 0L)
 
         val result = dao.getById("t1").first()
 

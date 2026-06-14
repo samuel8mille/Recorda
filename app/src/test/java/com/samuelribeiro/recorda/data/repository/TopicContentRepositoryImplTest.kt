@@ -7,6 +7,8 @@ import com.samuelribeiro.recorda.data.mapper.TopicContentMapper
 import com.samuelribeiro.recorda.data.prompt.GeminiTopicContentPromptBuilder
 import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.data.source.remote.service.GeminiService
+import com.samuelribeiro.recorda.data.sync.SyncCommandDispatcher
+import com.samuelribeiro.recorda.data.sync.SyncCommandType
 import com.samuelribeiro.recorda.domain.model.Chapter
 import com.samuelribeiro.recorda.domain.model.Topic
 import com.samuelribeiro.recorda.domain.model.TopicContent
@@ -34,6 +36,7 @@ class TopicContentRepositoryImplTest {
     private val topicDao: TopicDao = mockk(relaxed = true)
     private val mapper = TopicContentMapper()
     private val promptBuilder = GeminiTopicContentPromptBuilder()
+    private val syncCommandDispatcher: SyncCommandDispatcher = mockk(relaxed = true)
     private val serviceExecutor by lazy { ServiceExecutor(ioDispatcher = mainDispatcherRule.testDispatcher) }
 
     private val repository by lazy {
@@ -44,6 +47,7 @@ class TopicContentRepositoryImplTest {
             serviceExecutor = serviceExecutor,
             topicDao = topicDao,
             gson = Gson(),
+            syncCommandDispatcher = syncCommandDispatcher,
         )
     }
 
@@ -85,7 +89,19 @@ class TopicContentRepositoryImplTest {
 
         repository.generateTopicContent(topic).toList()
 
-        coVerify(exactly = 3) { topicDao.updateContent("1", any()) }
+        coVerify(exactly = 3) { topicDao.updateContent("1", any(), any()) }
+    }
+
+    @Test
+    fun `persists content incrementally enqueues an UPSERT_TOPIC_CONTENT sync command per step`() = runTest {
+        stubResponses("T: Causas | S: As origens\nT: Consequências | S: Os efeitos")
+        val topic = Topic("1", "Guerra", emptyList())
+
+        repository.generateTopicContent(topic).toList()
+
+        coVerify(exactly = 3) {
+            syncCommandDispatcher.enqueue(SyncCommandType.UPSERT_TOPIC_CONTENT, "1", any())
+        }
     }
 
     @Test
@@ -106,7 +122,7 @@ class TopicContentRepositoryImplTest {
         assertEquals(1, (steps[0] as TopicContentStep.ChapterGenerated).chapterIndex)
         assertIs<TopicContentStep.Completed>(steps[1])
         coVerify(exactly = 1) { geminiService.generateContent(any()) }
-        coVerify(exactly = 1) { topicDao.updateContent("1", any()) }
+        coVerify(exactly = 1) { topicDao.updateContent("1", any(), any()) }
     }
 
     @Test
@@ -117,7 +133,10 @@ class TopicContentRepositoryImplTest {
         val results = repository.generateTopicContent(topic).toList()
 
         assertTrue(results.last().isFailure)
-        coVerify(exactly = 0) { topicDao.updateContent(any(), any()) }
+        coVerify(exactly = 0) { topicDao.updateContent(any(), any(), any()) }
+        coVerify(exactly = 0) {
+            syncCommandDispatcher.enqueue(SyncCommandType.UPSERT_TOPIC_CONTENT, any(), any())
+        }
     }
 
     @Test
@@ -136,6 +155,6 @@ class TopicContentRepositoryImplTest {
 
         assertIs<TopicContentStep.ChaptersPlanned>(results.first().getOrThrow())
         assertTrue(results.last().isFailure)
-        coVerify(exactly = 1) { topicDao.updateContent("1", any()) }
+        coVerify(exactly = 1) { topicDao.updateContent("1", any(), any()) }
     }
 }

@@ -6,6 +6,9 @@ import com.samuelribeiro.recorda.core.network.ServiceExecutor
 import com.samuelribeiro.recorda.data.mapper.MindMapMapper
 import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.data.source.remote.service.GeminiService
+import com.samuelribeiro.recorda.data.sync.SyncCommandDispatcher
+import com.samuelribeiro.recorda.data.sync.SyncCommandType
+import com.samuelribeiro.recorda.data.sync.UpsertTopicMindMapPayload
 import com.samuelribeiro.recorda.domain.model.Flashcard
 import com.samuelribeiro.recorda.domain.model.Topic
 import com.samuelribeiro.recorda.domain.prompt.MindMapPromptBuilder
@@ -36,6 +39,7 @@ class MindMapRepositoryImplTest {
     private val promptBuilder: MindMapPromptBuilder = mockk {
         every { build(any(), any()) } returns "prompt"
     }
+    private val syncCommandDispatcher: SyncCommandDispatcher = mockk(relaxed = true)
 
     private val serviceExecutor by lazy {
         ServiceExecutor(ioDispatcher = mainDispatcherRule.testDispatcher)
@@ -49,6 +53,7 @@ class MindMapRepositoryImplTest {
             topicDao = topicDao,
             gson = gson,
             promptBuilder = promptBuilder,
+            syncCommandDispatcher = syncCommandDispatcher,
         )
     }
 
@@ -67,7 +72,22 @@ class MindMapRepositoryImplTest {
         val node = results.first().getOrThrow()
         assertEquals("Kotlin", node.title)
         assertEquals(listOf("Sintaxe", "Coroutines"), node.children.map { it.title })
-        coVerify { topicDao.updateMindMap("1", gson.toJson(node)) }
+        coVerify { topicDao.updateMindMap("1", gson.toJson(node), any()) }
+    }
+
+    @Test
+    fun `generateMindMap success enqueues an UPSERT_TOPIC_MIND_MAP sync command`() = runTest {
+        coEvery { geminiService.generateContent(any()) } returns "Kotlin\n- Sintaxe\n- Coroutines"
+
+        repository.generateMindMap(topic).toList()
+
+        coVerify {
+            syncCommandDispatcher.enqueue(
+                SyncCommandType.UPSERT_TOPIC_MIND_MAP,
+                "1",
+                match<UpsertTopicMindMapPayload> { it.topicId == "1" },
+            )
+        }
     }
 
     @Test
@@ -78,6 +98,9 @@ class MindMapRepositoryImplTest {
 
         assertTrue(results.first().isFailure)
         assertIs<NetworkError.NoInternet>(results.first().exceptionOrNull())
-        coVerify(exactly = 0) { topicDao.updateMindMap(any(), any()) }
+        coVerify(exactly = 0) { topicDao.updateMindMap(any(), any(), any()) }
+        coVerify(exactly = 0) {
+            syncCommandDispatcher.enqueue(SyncCommandType.UPSERT_TOPIC_MIND_MAP, any(), any())
+        }
     }
 }

@@ -8,6 +8,9 @@ import com.samuelribeiro.recorda.data.mapper.TopicEntityMapper
 import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.data.source.local.TopicEntity
 import com.samuelribeiro.recorda.data.source.remote.service.GeminiService
+import com.samuelribeiro.recorda.data.sync.SyncCommandDispatcher
+import com.samuelribeiro.recorda.data.sync.SyncCommandType
+import com.samuelribeiro.recorda.data.sync.UpsertTopicFlashcardsPayload
 import com.samuelribeiro.recorda.domain.model.Chapter
 import com.samuelribeiro.recorda.domain.model.Flashcard
 import com.samuelribeiro.recorda.domain.model.Topic
@@ -42,6 +45,7 @@ class TopicRepositoryImplTest {
     private val promptBuilder: FlashcardPromptBuilder = mockk {
         every { build(any(), any()) } answers { "prompt for ${firstArg<String>()}" }
     }
+    private val syncCommandDispatcher: SyncCommandDispatcher = mockk(relaxed = true)
 
     private val serviceExecutor by lazy {
         ServiceExecutor(ioDispatcher = mainDispatcherRule.testDispatcher)
@@ -56,6 +60,7 @@ class TopicRepositoryImplTest {
             topicDao = topicDao,
             gson = Gson(),
             promptBuilder = promptBuilder,
+            syncCommandDispatcher = syncCommandDispatcher,
         )
     }
 
@@ -99,6 +104,23 @@ class TopicRepositoryImplTest {
     }
 
     @Test
+    fun `createTopic enqueues a CREATE_TOPIC sync command`() = runTest {
+        val topic = repository.createTopic("História do Brasil")
+
+        coVerify {
+            syncCommandDispatcher.enqueue(SyncCommandType.CREATE_TOPIC, topic.id, any())
+        }
+    }
+
+    @Test
+    fun `deleteTopic enqueues a DELETE_TOPIC sync command`() = runTest {
+        repository.deleteTopic("1")
+
+        coVerify { topicDao.deleteById("1") }
+        coVerify { syncCommandDispatcher.enqueue(SyncCommandType.DELETE_TOPIC, "1", any()) }
+    }
+
+    @Test
     fun `generateFlashcards success returns cards and updates DB`() = runTest {
         coEvery { geminiService.generateContent(any()) } returns "P: What is Kotlin? | R: A JVM language"
 
@@ -108,7 +130,22 @@ class TopicRepositoryImplTest {
         val flashcards = results.first().getOrThrow()
         assertEquals(1, flashcards.size)
         assertEquals("What is Kotlin?", flashcards[0].question)
-        coVerify(exactly = 1) { topicDao.updateFlashcards("1", any()) }
+        coVerify(exactly = 1) { topicDao.updateFlashcards("1", any(), any()) }
+    }
+
+    @Test
+    fun `generateFlashcards success enqueues an UPSERT_TOPIC_FLASHCARDS sync command`() = runTest {
+        coEvery { geminiService.generateContent(any()) } returns "P: What is Kotlin? | R: A JVM language"
+
+        repository.generateFlashcards(topicWithContent()).toList()
+
+        coVerify {
+            syncCommandDispatcher.enqueue(
+                SyncCommandType.UPSERT_TOPIC_FLASHCARDS,
+                "1",
+                match<UpsertTopicFlashcardsPayload> { it.topicId == "1" },
+            )
+        }
     }
 
     @Test
@@ -119,7 +156,10 @@ class TopicRepositoryImplTest {
 
         assertTrue(results.first().isFailure)
         assertIs<NetworkError.NoInternet>(results.first().exceptionOrNull())
-        coVerify(exactly = 0) { topicDao.updateFlashcards(any(), any()) }
+        coVerify(exactly = 0) { topicDao.updateFlashcards(any(), any(), any()) }
+        coVerify(exactly = 0) {
+            syncCommandDispatcher.enqueue(SyncCommandType.UPSERT_TOPIC_FLASHCARDS, any(), any())
+        }
     }
 
     @Test

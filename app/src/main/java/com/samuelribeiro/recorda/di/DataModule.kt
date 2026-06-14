@@ -15,6 +15,8 @@ import com.samuelribeiro.recorda.data.repository.TopicContentRepositoryImpl
 import com.samuelribeiro.recorda.data.repository.TopicRepositoryImpl
 import com.samuelribeiro.recorda.data.source.local.AppDatabase
 import com.samuelribeiro.recorda.data.source.local.FlashcardReviewDao
+import com.samuelribeiro.recorda.data.source.local.MIGRATION_7_8
+import com.samuelribeiro.recorda.data.source.local.SyncCommandDao
 import com.samuelribeiro.recorda.data.source.local.TopicDao
 import com.samuelribeiro.recorda.domain.prompt.FlashcardPromptBuilder
 import com.samuelribeiro.recorda.domain.prompt.MindMapPromptBuilder
@@ -138,6 +140,7 @@ abstract class DataModule {
         @Singleton
         fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase =
             Room.databaseBuilder(context, AppDatabase::class.java, "recorda.db")
+                .addMigrations(MIGRATION_7_8)
                 .fallbackToDestructiveMigration(true)
                 .build()
 
@@ -150,5 +153,11 @@ abstract class DataModule {
         @Singleton
         fun provideFlashcardReviewDao(database: AppDatabase): FlashcardReviewDao =
             database.flashcardReviewDao()
+
+        /** Provides the [SyncCommandDao] from the [AppDatabase] singleton. */
+        @Provides
+        @Singleton
+        fun provideSyncCommandDao(database: AppDatabase): SyncCommandDao =
+            database.syncCommandDao()
     }
 }
