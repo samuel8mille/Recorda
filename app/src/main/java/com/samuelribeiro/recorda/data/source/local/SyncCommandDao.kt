@@ -20,4 +20,19 @@ interface SyncCommandDao {
     /** Emits the number of commands awaiting upload. */
     @Query("SELECT COUNT(*) FROM sync_commands WHERE status = 'PENDING'")
     fun pendingCount(): Flow<Int>
+
+    /** Marks the given commands as successfully uploaded. */
+    @Query("UPDATE sync_commands SET status = 'SENT', lastAttemptAtMillis = :attemptAtMillis WHERE id IN (:ids)")
+    suspend fun markSent(ids: List<String>, attemptAtMillis: Long)
+
+    /** Records a failed upload attempt, bumping the retry count and setting the new [status]. */
+    @Query(
+        "UPDATE sync_commands SET status = :status, retryCount = retryCount + 1, " +
+            "lastErrorMessage = :error, lastAttemptAtMillis = :attemptAtMillis WHERE id IN (:ids)",
+    )
+    suspend fun markFailed(ids: List<String>, status: String, error: String?, attemptAtMillis: Long)
+
+    /** Deletes uploaded commands whose last attempt is older than [olderThanMillis]. */
+    @Query("DELETE FROM sync_commands WHERE status = 'SENT' AND lastAttemptAtMillis < :olderThanMillis")
+    suspend fun pruneSent(olderThanMillis: Long)
 }

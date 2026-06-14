@@ -4,6 +4,7 @@ import android.app.Application
 import android.os.StrictMode
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.samuelribeiro.recorda.core.sync.SyncScheduler
 import com.samuelribeiro.recorda.logging.CrashReporter
 import com.samuelribeiro.recorda.logging.CrashlyticsTree
 import dagger.hilt.android.HiltAndroidApp
@@ -19,6 +20,9 @@ class RecordaApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var crashReporter: CrashReporter
 
+    @Inject
+    lateinit var syncScheduler: SyncScheduler
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
@@ -29,6 +33,7 @@ class RecordaApplication : Application(), Configuration.Provider {
         plantTimberTrees()
         crashReporter.setBuildType(isDebug = BuildConfig.DEBUG)
         if (BuildConfig.DEBUG) enableStrictMode()
+        syncScheduler.ensurePeriodicSync()
     }
 
     private fun plantTimberTrees() {

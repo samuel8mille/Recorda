@@ -65,6 +65,14 @@ android {
             "\"${localProps.getProperty("gemini.api.key", "")}\""
         )
         buildConfigField("String", "GEMINI_BASE_URL", "\"https://generativelanguage.googleapis.com/\"")
+
+        // Backend de sincronização (offline-first). Default 10.0.2.2:8080 = localhost da
+        // máquina de dev a partir do emulador; sobrescreva com sync.base.url em local.properties.
+        buildConfigField(
+            "String",
+            "SYNC_BASE_URL",
+            "\"${localProps.getProperty("sync.base.url", "http://10.0.2.2:8080/")}\""
+        )
     }
 
     androidResources {
@@ -131,6 +139,7 @@ dependencies {
     implementation(project(":core:mvi"))
     implementation(project(":core:network"))
     implementation(project(":core:ui"))
+    implementation(project(":core:sync"))
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
