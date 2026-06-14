@@ -28,14 +28,18 @@ class SyncScheduler @Inject constructor(
         .setRequiredNetworkType(NetworkType.CONNECTED)
         .build()
 
-    /** Requests an opportunistic one-off sync; coalesced so bursts of mutations enqueue once. */
+    /**
+     * Requests an opportunistic one-off sync. Uses [ExistingWorkPolicy.REPLACE] so a fresh
+     * mutation always starts a new attempt immediately, rather than inheriting the exponential
+     * backoff of a previously failed sync (which `APPEND_OR_REPLACE` would).
+     */
     fun requestSync() {
         val request = OneTimeWorkRequestBuilder<SyncWorker>()
             .setConstraints(networkConstraint)
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_SECONDS, TimeUnit.SECONDS)
             .build()
         workManagerProvider.get()
-            .enqueueUniqueWork(SyncWorker.WORK_NAME_ONESHOT, ExistingWorkPolicy.APPEND_OR_REPLACE, request)
+            .enqueueUniqueWork(SyncWorker.WORK_NAME_ONESHOT, ExistingWorkPolicy.REPLACE, request)
     }
 
     /** Ensures the recurring safety-net sync exists, keeping any already-scheduled instance. */

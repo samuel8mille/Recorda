@@ -22,7 +22,7 @@ class SyncSchedulerTest {
         verify {
             workManager.enqueueUniqueWork(
                 SyncWorker.WORK_NAME_ONESHOT,
-                ExistingWorkPolicy.APPEND_OR_REPLACE,
+                ExistingWorkPolicy.REPLACE,
                 any<OneTimeWorkRequest>(),
             )
         }
